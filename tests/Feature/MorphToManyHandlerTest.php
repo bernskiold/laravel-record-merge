@@ -3,6 +3,7 @@
 use Bernskiold\LaravelRecordMerge\RecordMerge;
 use Bernskiold\LaravelRecordMerge\Tests\Models\Tag;
 use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     // Create source and target models
@@ -129,4 +130,3 @@ test('it correctly handles the morph type field', function () {
     expect($morphEntries)->toHaveCount(1)
         ->and($morphEntries->first()->taggable_type)->toBe(TestModel::class);
 });
-

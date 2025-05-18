@@ -6,6 +6,11 @@ use Bernskiold\LaravelRecordMerge\Tests\Models\Tag;
 use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Mockery;
+
+afterEach(function () {
+    Mockery::close();
+});
 
 test('it handles large numbers of relationships', function () {
     // Create source and target models
@@ -110,4 +115,3 @@ test('it handles custom morph type field names', function () {
     // If we got here without exceptions, the test passes
     expect(true)->toBeTrue();
 });
-
