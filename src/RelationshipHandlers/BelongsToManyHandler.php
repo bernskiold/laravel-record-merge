@@ -5,14 +5,9 @@ namespace Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BelongsToManyHandler implements RelationshipHandler
 {
-
-    /**
-     * @todo Add support for pivot columns.
-     */
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
         /**
@@ -24,19 +19,34 @@ class BelongsToManyHandler implements RelationshipHandler
         $foreignPivotKey = $relation->getForeignPivotKeyName();
         $relatedPivotKey = $relation->getRelatedPivotKeyName();
 
-        // Get all the related model IDs.
-        $relatedIds = $relation->pluck($relatedPivotKey)->toArray();
-
-        // Detach all relations from the old model.
+        // Get all the related model IDs with their pivot data
+        $relatedModels = $relation->withPivot($relation->getPivotColumns())->get();
+        
+        // Detach all relations from the old model
         $relation->detach();
 
-        // Attach the relations to the target model and avoid duplicates.
+        // Get existing relations from the target model
         $existingRelations = $target->$relationshipName()->pluck($relatedPivotKey)->toArray();
-        $relationsToAdd = array_diff($relatedIds, $existingRelations);
-
-        if (!empty($relationsToAdd)) {
-            $target->$relationshipName()->attach($relationsToAdd);
+        
+        // Process each related model
+        foreach ($relatedModels as $relatedModel) {
+            $relatedId = $relatedModel->getKey();
+            
+            // Skip if this relation already exists on the target
+            if (in_array($relatedId, $existingRelations)) {
+                continue;
+            }
+            
+            // Get pivot data for this relation
+            $pivotData = [];
+            foreach ($relation->getPivotColumns() as $column) {
+                if ($column !== $foreignPivotKey && $column !== $relatedPivotKey) {
+                    $pivotData[$column] = $relatedModel->pivot->{$column};
+                }
+            }
+            
+            // Attach with pivot data
+            $target->$relationshipName()->attach($relatedId, $pivotData);
         }
     }
-
 }
