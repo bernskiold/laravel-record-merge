@@ -61,7 +61,7 @@ trait SupportsMerging
      * Attributes that should not be merged.
      * This method should return an array of attribute names that.
      */
-    protected function getNotMergeableAttributes(): array
+    public function getNotMergeableAttributes(): array
     {
         return [];
     }
