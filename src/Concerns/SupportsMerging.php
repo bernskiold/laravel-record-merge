@@ -25,6 +25,7 @@ use Illuminate\Foundation\Bus\PendingDispatch;
  * to preview the merge before it is executed.
  *
  * @mixin Model
+ *
  * @phpstan-ignore trait.unused
  */
 trait SupportsMerging

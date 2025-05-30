@@ -7,18 +7,17 @@ use Bernskiold\LaravelRecordMerge\Contracts\MergeLogger;
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-use function method_exists;
 use function trait_exists;
 
 class SpatieActivityLogMergeLogger implements MergeLogger
 {
     public function log(Mergeable $source, Mergeable $target, ?MergeData $data = null, ?Authenticatable $performedBy = null): void
     {
-        if (!trait_exists('Spatie\Activitylog\Trait\LogsActivity')) {
+        if (! trait_exists('Spatie\Activitylog\Trait\LogsActivity')) {
             return;
         }
 
-        if (!function_exists('activity')) {
+        if (! function_exists('activity')) {
             return;
         }
 
