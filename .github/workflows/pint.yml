@@ -1,10 +1,6 @@
 name: Laravel Pint
 
-on:
-  pull_request:
-    paths:
-      - '**.php'
-      - '.github/workflows/pint.yml'
+on: [push]
 
 jobs:
   pint:
@@ -33,7 +29,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Apply Laravel Pint changes
-          commit_user_name: GitHub Action
-          commit_user_email: action@github.com
-          commit_author: GitHub Action <action@github.com>
 
