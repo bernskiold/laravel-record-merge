@@ -18,6 +18,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
+use function array_merge;
+use function in_array;
 
 class RecordMerge
 {
@@ -25,17 +27,23 @@ class RecordMerge
     /**
      * Callback to execute after the merging is complete.
      */
-    protected ?Closure $afterMergingCallback = null;
+    public ?Closure $afterMergingCallback = null;
 
     /**
      * Whether to delete the source model after merging.
      */
     public bool $deleteSourceAfterMerging = true;
 
+    /**
+     * The attributes that are allowed to be merged
+     * from the source model to the target model.
+     */
+    public array $mergeableAttributes = [];
+
     public function __construct(
-        protected ?Mergeable       $source = null,
-        protected ?Mergeable       $target = null,
-        protected ?Authenticatable $performedBy = null,
+        public ?Mergeable       $source = null,
+        public ?Mergeable       $target = null,
+        public ?Authenticatable $performedBy = null,
     )
     {
     }
@@ -43,9 +51,9 @@ class RecordMerge
     /**
      * Create a new record merge instance.
      */
-    public static function new(?Mergeable $source = null, ?Mergeable $target = null): static
+    public static function new(?Mergeable $source = null, ?Mergeable $target = null, ?Authenticatable $performedBy = null): static
     {
-        return new static($source, $target);
+        return new static($source, $target, $performedBy);
     }
 
 
@@ -87,6 +95,7 @@ class RecordMerge
         DB::beginTransaction();
 
         try {
+            $this->mergeAttributes();
             $this->reassignRelationships();
             $this->log($details);
 
@@ -140,30 +149,68 @@ class RecordMerge
         $sourceAttributes = $this->source->getAttributes();
         $targetAttributes = $this->target->getAttributes();
 
-        $comparison = [];
+        return collect(array_keys($sourceAttributes))
+            ->merge(array_keys($targetAttributes))
+            ->filter(fn($value, $key) => $this->canAttributeBeMerged($key))
+            ->mapWithKeys(function ($value, $key) {
+                return [
+                    $key => new AttributeComparison(
+                        sourceValue: $this->source->getAttribute($key),
+                        targetValue: $this->target->getAttribute($key),
+                    ),
+                ];
+            })
+            ->all();
+    }
 
-        // Create a list of all the attributes from both models.
-        $allKeys = array_unique(array_merge(array_keys($sourceAttributes), array_keys($targetAttributes)));
+    /**
+     * Returns the attributes that will be merged
+     *
+     * This will return an array of attributes that will be merged
+     * from the source model to the target model.
+     */
+    protected function getAttributesToMerge(): array
+    {
+        return collect($this->source->getAttributes())
+            ->filter(fn($value, $attribute) => $this->canAttributeBeMerged($attribute))
+            ->unique()
+            ->all();
+    }
 
-        foreach ($allKeys as $key) {
+    /**
+     * Merges the attributes from the source model to the target model.
+     *
+     * This will only merge attributes that are not already set on the target model,
+     * and will skip any attributes that are null, so that the merge only
+     * adds data and does not remove any existing data on the target model.
+     */
+    protected function mergeAttributes(): void
+    {
+        $attributes = $this->getAttributesToMerge();
 
-            // Skip the key.
-            if ($key === $this->source->getKeyName()) {
-                continue;
-            }
-
-            // Skip attributes that are not mergeable.
-            if (in_array($key, $this->source->getNotMergeableAttributes(), true)) {
-                continue;
-            }
-
-            $comparison[$key] = new AttributeComparison(
-                sourceValue: Arr::get($sourceAttributes, $key),
-                targetValue: Arr::get($targetAttributes, $key),
-            );
+        // If there are no attributes to merge, we can skip this step.
+        if (empty($attributes)) {
+            return;
         }
 
-        return $comparison;
+        foreach ($attributes as $key => $value) {
+
+            // If the attribute is already set on the target model, we skip it.
+            if ($this->target->getAttribute($key) !== null) {
+                continue;
+            }
+
+            // If the value is null, we skip it.
+            if ($value === null) {
+                continue;
+            }
+
+            // Set the attribute on the target model.
+            $this->target->{$key} = $value;
+        }
+
+        // Save the target model with the merged attributes.
+        $this->target->save();
     }
 
     /**
@@ -283,6 +330,45 @@ class RecordMerge
     }
 
     /**
+     * Checks if an attribute can be merged.
+     */
+    public function canAttributeBeMerged(string $attribute): bool
+    {
+        // If we have a list of allowed attributes, we only merge those.
+        if (!empty($this->mergeableAttributes) && !in_array($attribute, $this->mergeableAttributes, true)) {
+            return false;
+        }
+
+        // We do not allow the primary key to be merged.
+        if ($attribute === $this->source->getKeyName()) {
+            return false;
+        }
+
+        // We do not allow core timestamps to be merged.
+        if (in_array($attribute, [$this->source->getCreatedAtColumn(), $this->source->getUpdatedAtColumn()], true)) {
+            return false;
+        }
+
+        // For soft deletes, we do not allow the deleted_at attribute to be merged.
+        if (method_exists($this->source, 'bootSoftDeletes') && $attribute === $this->source->getDeletedAtColumn()) {
+            return false;
+        }
+
+        // We do not allow attributes that are relationships to be merged.
+        // They will be handled by the relationship handlers.
+        if (str_ends_with($attribute, '_id') || str_ends_with($attribute, '_type')) {
+            return false;
+        }
+
+        // We do not allow attributes that are not mergeable.
+        if (in_array($attribute, $this->target->getNotMergeableAttributes(), true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Log the details of the merge operating.
      *
      * This will use the configured loggers to log the merge details.
@@ -334,6 +420,11 @@ class RecordMerge
         return $this;
     }
 
+    /**
+     * Set the user that performed the merge.
+     *
+     * This is useful for logging and auditing purposes.
+     */
     public function performedBy(?Authenticatable $user): static
     {
         $this->performedBy = $user;
@@ -351,5 +442,26 @@ class RecordMerge
     public function dontDeleteAfterMerging(): static
     {
         return $this->deleteAfterMerging(false);
+    }
+
+    public function allowedAttributes(array $attributes): static
+    {
+        $this->mergeableAttributes = $attributes;
+
+        return $this;
+    }
+
+    public function allowAttributes(string|array $attributes): static
+    {
+        if (is_string($attributes)) {
+            $attributes = explode(',', $attributes);
+        }
+
+        $attributes = array_unique(array_merge(
+            $this->mergeableAttributes,
+            array_map('trim', $attributes)
+        ));
+
+        return $this->allowedAttributes($attributes);
     }
 }

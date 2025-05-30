@@ -2,34 +2,40 @@
 
 use Bernskiold\LaravelRecordMerge\Tests\Models\ModelWithoutRelationships;
 use Bernskiold\LaravelRecordMerge\Tests\Models\SoftDeletableModelWithoutRelationships;
-use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 
 it('can be merged', function () {
-    $modelA = ModelWithoutRelationships::create(['name' => 'Model A', 'description' => 'This is model A']);
-    $modelB = ModelWithoutRelationships::create(['name' => 'Model B', 'description' => 'This is model B']);
+    $modelA = ModelWithoutRelationships::create(['name' => 'Model A']);
+    $modelB = ModelWithoutRelationships::create(['name' => 'Model B']);
 
     $modelA->mergeTo($modelB);
 
     assertDatabaseMissing('model_without_relationships', [
         'id' => $modelA->id,
-        'name' => 'Model A',
-        'description' => 'This is model A',
     ]);
+
+    expect($modelB->refresh())->name->toBe('Model B');
 });
 
-it('trashes the record when soft deletable', function () {
-    $modelA = SoftDeletableModelWithoutRelationships::create(['name' => 'Model A', 'description' => 'This is model A']);
-    $modelB = SoftDeletableModelWithoutRelationships::create(['name' => 'Model B', 'description' => 'This is model B']);
+it('fills in missing target attributes with source attributes', function () {
+    $modelA = ModelWithoutRelationships::create(['name' => 'Model A', 'description' => 'This is model A']);
+    $modelB = ModelWithoutRelationships::create(['name' => 'Model B']);
 
     $modelA->mergeTo($modelB);
 
-    assertDatabaseHas('soft_deletable_model_without_relationships', [
-        'id' => $modelA->id,
-    ]);
-
-    $modelA->refresh();
-
-    expect($modelA->trashed())->toBeTrue();
+    expect($modelB->refresh())
+        ->name->toBe('Model B')
+        ->description->toBe('This is model A')
+        ->created_at->toEqual($modelB->created_at)
+        ->updated_at->toEqual($modelB->updated_at);
 });
 
+it('trashes the record when soft deletable', function () {
+    $modelA = SoftDeletableModelWithoutRelationships::create(['name' => 'Model A']);
+    $modelB = SoftDeletableModelWithoutRelationships::create(['name' => 'Model B']);
+
+    $modelA->mergeTo($modelB);
+
+    expect($modelA->refresh())
+        ->trashed()->toBeTrue();
+});
