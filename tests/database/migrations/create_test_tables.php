@@ -27,6 +27,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
+            $table->foreignId('parent_id')->nullable();
+            $table->foreignId('profile_parent_id')->nullable();
+            $table->nullableMorphs('commentable');
             $table->timestamps();
         });
 
@@ -61,6 +64,7 @@ return new class extends Migration {
         Schema::dropIfExists('tag_test_model');
         Schema::dropIfExists('tags');
         Schema::dropIfExists('test_models');
+        Schema::dropIfExists('soft_deletable_model_without_relationships');
+        Schema::dropIfExists('model_without_relationships');
     }
 };
-
