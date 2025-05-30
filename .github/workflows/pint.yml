@@ -1,0 +1,39 @@
+name: Laravel Pint
+
+on:
+  pull_request:
+    paths:
+      - '**.php'
+      - '.github/workflows/pint.yml'
+
+jobs:
+  pint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run Laravel Pint
+        run: vendor/bin/pint
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Apply Laravel Pint changes
+          commit_user_name: GitHub Action
+          commit_user_email: action@github.com
+          commit_author: GitHub Action <action@github.com>
+
