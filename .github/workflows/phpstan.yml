@@ -1,0 +1,59 @@
+name: PHPStan
+
+on:
+  pull_request:
+    paths:
+      - '**.php'
+      - 'phpstan.neon'
+      - 'phpstan.neon.dist'
+      - '.github/workflows/phpstan.yml'
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check if phpstan.neon exists
+        id: check_phpstan
+        run: |
+          if [ -f phpstan.neon ] || [ -f phpstan.neon.dist ]; then
+            echo "phpstan_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "phpstan_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create phpstan.neon if it doesn't exist
+        if: steps.check_phpstan.outputs.phpstan_exists == 'false'
+        run: |
+          echo "parameters:
+            level: 4
+            paths:
+              - src
+            tmpDir: build/phpstan
+            checkMissingIterableValueType: false" > phpstan.neon.dist
+
+      - name: Install PHPStan
+        if: steps.check_phpstan.outputs.phpstan_exists == 'false'
+        run: composer require --dev phpstan/phpstan
+
+      - name: Run PHPStan
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse
+          else
+            composer require --dev phpstan/phpstan && vendor/bin/phpstan analyse
+          fi
+

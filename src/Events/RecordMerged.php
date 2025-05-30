@@ -16,7 +16,5 @@ class RecordMerged
         public Mergeable $source,
         public Mergeable $target,
         public ?Authenticatable $performedBy = null,
-    )
-    {
-    }
+    ) {}
 }

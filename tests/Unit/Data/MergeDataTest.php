@@ -5,7 +5,8 @@ use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
 
 it('can be constructed', function () {
-    $model = new class implements Mergeable {
+    $model = new class implements Mergeable
+    {
         use SupportsMerging;
     };
 

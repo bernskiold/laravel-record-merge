@@ -4,7 +4,7 @@ use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
 use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 
 it('can be instantiated', function () {
-    $config = new MergeConfig();
+    $config = new MergeConfig;
     expect($config)->toBeInstanceOf(MergeConfig::class);
 });
 
@@ -31,7 +31,7 @@ it('can be instantiated using the static make method', function () {
 });
 
 it('can check if the map is empty', function () {
-    $emptyConfig = new MergeConfig();
+    $emptyConfig = new MergeConfig;
     expect($emptyConfig->isEmpty())->toBeTrue();
 
     $nonEmptyConfig = new MergeConfig(['name' => MergeStrategy::UseSource]);
@@ -83,4 +83,3 @@ it('can check if an attribute should be skipped', function () {
         ->and($config->shouldSkip('name'))->toBeFalse()
         ->and($config->shouldSkip('unknown'))->toBeFalse();
 });
-

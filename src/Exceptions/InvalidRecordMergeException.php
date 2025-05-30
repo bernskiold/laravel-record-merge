@@ -7,7 +7,6 @@ use Exception;
 
 class InvalidRecordMergeException extends Exception
 {
-
     /**
      * The source model that was attempted to be merged.
      */
@@ -20,12 +19,12 @@ class InvalidRecordMergeException extends Exception
 
     public static function noSource(): self
     {
-        return new self("No source model was provided for merging from.");
+        return new self('No source model was provided for merging from.');
     }
 
     public static function noTarget(): self
     {
-        return new self("No target model was provided for merging into.");
+        return new self('No target model was provided for merging into.');
     }
 
     public static function notSameModel(Mergeable $source, Mergeable $target): self
@@ -42,7 +41,7 @@ class InvalidRecordMergeException extends Exception
 
     public static function sameId(Mergeable $source, Mergeable $target): self
     {
-        $instance = new self("The source model and the target model are the same.");
+        $instance = new self('The source model and the target model are the same.');
         $instance->source = $source;
         $instance->target = $target;
 
@@ -64,5 +63,4 @@ class InvalidRecordMergeException extends Exception
     {
         return $this->target;
     }
-
 }

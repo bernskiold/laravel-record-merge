@@ -1,8 +1,5 @@
 <?php
 
-use Bernskiold\LaravelRecordMerge\Concerns\SupportsMerging;
-use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
-use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Data\RelationshipCount;
 
 it('can be constructed', function () {

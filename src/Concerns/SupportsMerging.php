@@ -2,12 +2,12 @@
 
 namespace Bernskiold\LaravelRecordMerge\Concerns;
 
-use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
-use \Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -25,11 +25,11 @@ use Illuminate\Foundation\Bus\PendingDispatch;
  * to preview the merge before it is executed.
  *
  * @mixin Model
- * @implements Mergeable
+ *
+ * @phpstan-ignore trait.unused
  */
 trait SupportsMerging
 {
-
     /**
      * Handle the merging of this record with
      * another record of the same type.

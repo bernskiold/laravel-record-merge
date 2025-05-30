@@ -18,7 +18,5 @@ class RecordMergeFailed
         public Mergeable $target,
         public ?Authenticatable $performedBy = null,
         public ?Throwable $exception = null,
-    )
-    {
-    }
+    ) {}
 }

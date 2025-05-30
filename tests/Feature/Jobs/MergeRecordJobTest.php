@@ -6,9 +6,7 @@ use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
 use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
-use Bernskiold\LaravelRecordMerge\RecordMerge;
 use Bernskiold\LaravelRecordMerge\Tests\Models\ModelWithoutRelationships;
-use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Event;
 

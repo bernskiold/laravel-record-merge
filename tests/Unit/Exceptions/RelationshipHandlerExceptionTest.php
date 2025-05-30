@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use Bernskiold\LaravelRecordMerge\Exceptions\RelationshipHandlerException;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 test('missing handler exception', function () {
     $relation = mock(BelongsTo::class);
@@ -11,5 +10,5 @@ test('missing handler exception', function () {
     expect($exception)
         ->toBeInstanceOf(RelationshipHandlerException::class)
         ->and($exception->getMessage())
-        ->toBe("A relationship handler for " . get_class($relation) . " could not be found.");
+        ->toBe('A relationship handler for '.get_class($relation).' could not be found.');
 });

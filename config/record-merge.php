@@ -1,8 +1,8 @@
 <?php
 
 use Bernskiold\LaravelRecordMerge\Loggers\SpatieActivityLogMergeLogger;
-use Illuminate\Database\Eloquent\Relations;
 use Bernskiold\LaravelRecordMerge\RelationshipHandlers;
+use Illuminate\Database\Eloquent\Relations;
 
 return [
 

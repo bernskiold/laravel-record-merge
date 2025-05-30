@@ -12,12 +12,10 @@ class MergeData
         /**
          * @var array<string, RelationshipCount>
          */
-        public readonly array     $relationshipCounts,
+        public readonly array $relationshipCounts,
         /**
          * @var array<string, AttributeComparison>
          */
-        public readonly array     $comparison,
-    )
-    {
-    }
+        public readonly array $comparison,
+    ) {}
 }

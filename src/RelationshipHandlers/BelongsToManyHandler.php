@@ -5,7 +5,7 @@ namespace Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Arr;
+
 use function data_get;
 
 /**
@@ -22,9 +22,12 @@ class BelongsToManyHandler implements RelationshipHandler
     {
         /**
          * @var BelongsToMany $sourceRelation
-         * @var BelongsToMany $targetRelation
          */
         $sourceRelation = $source->{$relationshipName}();
+
+        /**
+         * @var BelongsToMany $targetRelation
+         */
         $targetRelation = $target->{$relationshipName}();
 
         $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();

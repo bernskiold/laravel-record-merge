@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;
 
 it('can be constructed without a performer and exception', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -23,15 +24,15 @@ it('can be constructed without a performer and exception', function () {
 });
 
 it('can be constructed with a performer', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
     $source = clone $model;
     $target = clone $model;
 
-    $user = new class extends User {
-    };
+    $user = new class extends User {};
 
     expect(new RecordMergeFailed($source, $target, $user))
         ->toBeInstanceOf(RecordMergeFailed::class)
@@ -42,7 +43,8 @@ it('can be constructed with a performer', function () {
 });
 
 it('can be constructed with an exception', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 

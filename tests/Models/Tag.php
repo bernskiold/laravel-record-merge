@@ -18,4 +18,3 @@ class Tag extends Model
         return $this->morphedByMany(TestModel::class, 'taggable');
     }
 }
-
