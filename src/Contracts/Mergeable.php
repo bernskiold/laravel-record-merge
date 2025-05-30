@@ -33,4 +33,13 @@ interface Mergeable
      */
     public function getNotMergeableAttributes(): array;
 
+    /**
+     * Get the label for the mergeable record.
+     *
+     * This label can be used in the UI to reference the record
+     * as well as in logs. This can be helpful to identify
+     * records that were later removed.
+     */
+    public function getMergeableLabel(): ?string;
+
 }

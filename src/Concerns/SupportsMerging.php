@@ -65,4 +65,19 @@ trait SupportsMerging
     {
         return [];
     }
+
+    /**
+     * Get the label for the mergeable record.
+     *
+     * This method should return a string that represents
+     * the record in a human-readable format, such as a name
+     * or title. It is used to identify the record in logs,
+     * notifications, and other user interfaces. And is
+     * particularly helpful to identify the
+     * deleted records after a merge.
+     */
+    public function getMergeableLabel(): ?string
+    {
+        return $this->name ?? $this->label ?? $this->title ?? $this->getKey();
+    }
 }

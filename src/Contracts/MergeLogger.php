@@ -8,6 +8,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 interface MergeLogger
 {
 
-    public function log(Mergeable $source, Mergeable $target, MergeData $data, ?Authenticatable $performedBy = null): void;
+    public function log(Mergeable $source, Mergeable $target, ?MergeData $data = null, ?Authenticatable $performedBy = null): void;
 
 }

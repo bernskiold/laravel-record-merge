@@ -10,6 +10,5 @@ class RelationshipCount
         public readonly int    $targetCount,
     )
     {
-
     }
 }

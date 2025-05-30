@@ -27,6 +27,11 @@ class RecordMerge
      */
     protected ?Closure $afterMergingCallback = null;
 
+    /**
+     * Whether to delete the source model after merging.
+     */
+    public bool $deleteSourceAfterMerging = true;
+
     public function __construct(
         protected ?Mergeable       $source = null,
         protected ?Mergeable       $target = null,
@@ -89,6 +94,8 @@ class RecordMerge
             if ($this->afterMergingCallback) {
                 ($this->afterMergingCallback)($this->source, $this->target, $this->performedBy);
             }
+
+            $this->source->delete();
 
             DB::commit();
 
@@ -327,10 +334,22 @@ class RecordMerge
         return $this;
     }
 
-    public function performedBy(Authenticatable $user): static
+    public function performedBy(?Authenticatable $user): static
     {
         $this->performedBy = $user;
 
         return $this;
+    }
+
+    public function deleteAfterMerging(bool $delete = true): static
+    {
+        $this->deleteSourceAfterMerging = $delete;
+
+        return $this;
+    }
+
+    public function dontDeleteAfterMerging(): static
+    {
+        return $this->deleteAfterMerging(false);
     }
 }

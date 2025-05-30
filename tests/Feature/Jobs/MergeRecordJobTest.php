@@ -1,0 +1,106 @@
+<?php
+
+use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
+use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
+use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
+use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
+use Bernskiold\LaravelRecordMerge\RecordMerge;
+use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\Event;
+
+it('can be constructed without performer', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+
+    $job = new MergeRecordJob($source, $target);
+
+    expect($job->source)->toBe($source)
+        ->and($job->target)->toBe($target)
+        ->and($job->performedBy)->toBeNull()
+        ->and($job->queue)->toBe(config('record-merge.queue.queue'))
+        ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
+});
+
+it('can be constructed with performer', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+    $performer = mock(User::class);
+
+    $job = new MergeRecordJob($source, $target, $performer);
+
+    expect($job->source)->toBe($source)
+        ->and($job->target)->toBe($target)
+        ->and($job->performedBy)->toBe($performer)
+        ->and($job->queue)->toBe(config('record-merge.queue.queue'))
+        ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
+});
+
+it('can generate a unique ID', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+
+    $source->shouldReceive('getMorphClass')->andReturn('SourceModel');
+    $source->shouldReceive('getKey')->andReturn(1);
+    $target->shouldReceive('getMorphClass')->andReturn('TargetModel');
+    $target->shouldReceive('getKey')->andReturn(2);
+
+    $job = new MergeRecordJob($source, $target);
+
+    expect($job->uniqueId())->toBe('SourceModel:1-TargetModel:2');
+});
+
+it('triggers RecordMergeFailed event on failure', function () {
+    Event::fake();
+
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+    $performer = mock(User::class);
+
+    $job = new MergeRecordJob($source, $target, $performer);
+    $job->fail(new Exception('Test exception'));
+
+    Event::assertDispatched(RecordMergeFailed::class, function ($event) use ($source, $target, $performer) {
+        return $event->source === $source &&
+            $event->target === $target &&
+            $event->performedBy === $performer &&
+            $event->exception instanceof Exception;
+    });
+});
+
+it('can generate tags', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+
+    $source->shouldReceive('getMorphClass')->andReturn('SourceModel');
+    $source->shouldReceive('getKey')->andReturn(1);
+    $target->shouldReceive('getMorphClass')->andReturn('TargetModel');
+    $target->shouldReceive('getKey')->andReturn(2);
+
+    $job = new MergeRecordJob($source, $target);
+
+    expect($job->tags())->toBe([
+        'record-merge',
+        'source:SourceModel:1',
+        'target:TargetModel:2',
+    ]);
+});
+
+it('performs the job', function () {
+    Event::fake();
+
+    $source = TestModel::create(['name' => 'One']);
+    $target = TestModel::create(['name' => 'Two']);
+
+    $performer = mock(User::class);
+
+    $job = new MergeRecordJob($source, $target, $performer);
+
+    $job->handle();
+
+    Event::assertDispatched(RecordMerged::class, function ($event) use ($source, $target, $performer) {
+        return $event->source === $source &&
+            $event->target === $target &&
+            $event->performedBy === $performer;
+    });
+});

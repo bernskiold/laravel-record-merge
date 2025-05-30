@@ -12,8 +12,7 @@ use function trait_exists;
 
 class SpatieActivityLogMergeLogger implements MergeLogger
 {
-
-    public function log(Mergeable $source, Mergeable $target, MergeData $data, ?Authenticatable $performedBy = null): void
+    public function log(Mergeable $source, Mergeable $target, ?MergeData $data = null, ?Authenticatable $performedBy = null): void
     {
         if (!trait_exists('Spatie\Activitylog\Trait\LogsActivity')) {
             return;
@@ -28,7 +27,9 @@ class SpatieActivityLogMergeLogger implements MergeLogger
             ->causedBy($performedBy)
             ->event('merged-into')
             ->withProperties([
+                'merged_into_type' => $target->getMorphClass(),
                 'merged_into_id' => $target->getKey(),
+                'merged_into_label' => $target->getMergeableLabel(),
             ])
             ->log("The record was merged.");
 
@@ -37,9 +38,10 @@ class SpatieActivityLogMergeLogger implements MergeLogger
             ->causedBy($performedBy)
             ->event('merge-received')
             ->withProperties([
+                'merged_from_type' => $source->getMorphClass(),
                 'merged_from_id' => $source->getKey(),
+                'merged_from_label' => $source->getMergeableLabel(),
             ])
             ->log("A record was merged into this one.");
     }
-
 }
