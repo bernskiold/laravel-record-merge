@@ -20,10 +20,10 @@ class MorphToManyHandler implements RelationshipHandler
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
         /** @var MorphToMany $sourceRelation */
-        $sourceRelation = $source->$relationshipName();
+        $sourceRelation = $source->{$relationshipName}();
 
         /** @var MorphToMany $targetRelation */
-        $targetRelation = $target->$relationshipName();
+        $targetRelation = $target->{$relationshipName}();
 
         $morphType = $sourceRelation->getMorphType();
         $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();
@@ -61,3 +61,4 @@ class MorphToManyHandler implements RelationshipHandler
         }
     }
 }
+

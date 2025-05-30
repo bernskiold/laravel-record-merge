@@ -25,7 +25,6 @@ use Illuminate\Foundation\Bus\PendingDispatch;
  * to preview the merge before it is executed.
  *
  * @mixin Model
- *
  * @implements Mergeable
  */
 trait SupportsMerging
@@ -80,3 +79,4 @@ trait SupportsMerging
         return $this->name ?? $this->label ?? $this->title ?? $this->getKey();
     }
 }
+
