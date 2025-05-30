@@ -15,6 +15,10 @@ use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -335,8 +339,17 @@ class RecordMerge
      */
     protected function getHandlerForRelationship(Relation $relation): RelationshipHandler|false|null
     {
+        /**
+         * These are handlers that by default don't need to be handled.
+         * They can be overridden in the config file if really necessary,
+         * but they need to be skipped by defauly.
+         */
         $defaultHandlers = [
-            BelongsTo::class => false,
+            BelongsTo::class => false, // This is handled by the attribute mapping.
+            HasOneThrough::class => false, // This is handled by the direct relationship.
+            HasManyThrough::class => false, // This is handled by the direct relationship.
+            HasOneOrManyThrough::class => false, // This is handled by the direct relationship.
+            MorphTo::class => false, // This is handled by the attribute mapping.
         ];
 
         $handlers = config('record-merge.handlers', []);
