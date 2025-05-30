@@ -1,11 +1,13 @@
 <?php
 
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
-use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
 use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
+use Bernskiold\LaravelRecordMerge\Tests\Models\ModelWithoutRelationships;
 use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Event;
@@ -40,14 +42,14 @@ it('can be constructed with performer', function () {
 it('can be constructed with merge map', function () {
     $source = mock(Mergeable::class);
     $target = mock(Mergeable::class);
-    $mergeMap = new MergeMapConfig(['name' => MergeMapConfig::SOURCE]);
+    $mergeMap = new MergeConfig(['name' => MergeStrategy::UseSource]);
 
     $job = new MergeRecordJob($source, $target, null, $mergeMap);
 
     expect($job->source)->toBe($source)
         ->and($job->target)->toBe($target)
         ->and($job->performedBy)->toBeNull()
-        ->and($job->mergeMap)->toBe($mergeMap)
+        ->and($job->mergeConfig)->toBe($mergeMap)
         ->and($job->queue)->toBe(config('record-merge.queue.queue'))
         ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
 });
@@ -105,8 +107,8 @@ it('can generate tags', function () {
 it('performs the job', function () {
     Event::fake();
 
-    $source = TestModel::create(['name' => 'One']);
-    $target = TestModel::create(['name' => 'Two']);
+    $source = ModelWithoutRelationships::create(['name' => 'One']);
+    $target = ModelWithoutRelationships::create(['name' => 'Two']);
 
     $performer = mock(User::class);
 
@@ -124,9 +126,9 @@ it('performs the job', function () {
 it('performs the job with merge map', function () {
     Event::fake();
 
-    $source = TestModel::create(['name' => 'One']);
-    $target = TestModel::create(['name' => 'Two']);
-    $mergeMap = new MergeMapConfig(['name' => MergeMapConfig::SOURCE]);
+    $source = ModelWithoutRelationships::create(['name' => 'One']);
+    $target = ModelWithoutRelationships::create(['name' => 'Two']);
+    $mergeMap = new MergeConfig(['name' => MergeStrategy::UseSource]);
 
     $performer = mock(User::class);
 

@@ -2,34 +2,22 @@
 
 namespace Bernskiold\LaravelRecordMerge\Data;
 
-class MergeMapConfig
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
+use Illuminate\Support\Arr;
+
+class MergeConfig
 {
-    /**
-     * The attribute should be merged from source to target.
-     */
-    public const SOURCE = 'source';
-
-    /**
-     * The attribute should be kept on the target.
-     */
-    public const TARGET = 'target';
-
-    /**
-     * The attribute should be skipped during the merge.
-     */
-    public const SKIP = 'skip';
-
     /**
      * The merge map configuration.
      *
-     * @var array<string, string>
+     * @var array<string, MergeStrategy>
      */
     protected array $map = [];
 
     /**
      * Create a new merge map configuration.
      *
-     * @param array<string, string> $map
+     * @param array<string, MergeStrategy> $map
      */
     public function __construct(array $map = [])
     {
@@ -39,7 +27,7 @@ class MergeMapConfig
     /**
      * Create a new merge map configuration.
      *
-     * @param array<string, string> $map
+     * @param array<string, MergeStrategy> $map
      */
     public static function make(array $map = []): self
     {
@@ -49,7 +37,7 @@ class MergeMapConfig
     /**
      * Get the merge map configuration.
      *
-     * @return array<string, string>
+     * @return array<string, MergeStrategy>
      */
     public function getMap(): array
     {
@@ -67,9 +55,9 @@ class MergeMapConfig
     /**
      * Get the merge strategy for an attribute.
      */
-    public function getStrategyForAttribute(string $attribute): ?string
+    public function getStrategyForAttribute(string $attribute): ?MergeStrategy
     {
-        return $this->map[$attribute] ?? null;
+        return Arr::get($this->map, $attribute);
     }
 
     /**
@@ -77,7 +65,7 @@ class MergeMapConfig
      */
     public function shouldMergeFromSource(string $attribute): bool
     {
-        return $this->getStrategyForAttribute($attribute) === self::SOURCE;
+        return $this->getStrategyForAttribute($attribute) === MergeStrategy::UseSource;
     }
 
     /**
@@ -85,7 +73,7 @@ class MergeMapConfig
      */
     public function shouldKeepOnTarget(string $attribute): bool
     {
-        return $this->getStrategyForAttribute($attribute) === self::TARGET;
+        return $this->getStrategyForAttribute($attribute) === MergeStrategy::UseTarget;
     }
 
     /**
@@ -93,7 +81,7 @@ class MergeMapConfig
      */
     public function shouldSkip(string $attribute): bool
     {
-        return $this->getStrategyForAttribute($attribute) === self::SKIP;
+        return $this->getStrategyForAttribute($attribute) === MergeStrategy::Skip;
     }
 }
 

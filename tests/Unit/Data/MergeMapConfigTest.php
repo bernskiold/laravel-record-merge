@@ -1,59 +1,60 @@
 <?php
 
-use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 
 it('can be instantiated', function () {
-    $config = new MergeMapConfig();
-    expect($config)->toBeInstanceOf(MergeMapConfig::class);
+    $config = new MergeConfig();
+    expect($config)->toBeInstanceOf(MergeConfig::class);
 });
 
 it('can be instantiated with a map', function () {
     $map = [
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
-        'phone' => MergeMapConfig::SKIP,
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
+        'phone' => MergeStrategy::Skip,
     ];
 
-    $config = new MergeMapConfig($map);
+    $config = new MergeConfig($map);
     expect($config->getMap())->toBe($map);
 });
 
 it('can be instantiated using the static make method', function () {
     $map = [
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
-        'phone' => MergeMapConfig::SKIP,
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
+        'phone' => MergeStrategy::Skip,
     ];
 
-    $config = MergeMapConfig::make($map);
+    $config = MergeConfig::make($map);
     expect($config->getMap())->toBe($map);
 });
 
 it('can check if the map is empty', function () {
-    $emptyConfig = new MergeMapConfig();
+    $emptyConfig = new MergeConfig();
     expect($emptyConfig->isEmpty())->toBeTrue();
 
-    $nonEmptyConfig = new MergeMapConfig(['name' => MergeMapConfig::SOURCE]);
+    $nonEmptyConfig = new MergeConfig(['name' => MergeStrategy::UseSource]);
     expect($nonEmptyConfig->isEmpty())->toBeFalse();
 });
 
 it('can get the strategy for an attribute', function () {
-    $config = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
-        'phone' => MergeMapConfig::SKIP,
+    $config = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
+        'phone' => MergeStrategy::Skip,
     ]);
 
-    expect($config->getStrategyForAttribute('name'))->toBe(MergeMapConfig::SOURCE)
-        ->and($config->getStrategyForAttribute('email'))->toBe(MergeMapConfig::TARGET)
-        ->and($config->getStrategyForAttribute('phone'))->toBe(MergeMapConfig::SKIP)
+    expect($config->getStrategyForAttribute('name'))->toBe(MergeStrategy::UseSource)
+        ->and($config->getStrategyForAttribute('email'))->toBe(MergeStrategy::UseTarget)
+        ->and($config->getStrategyForAttribute('phone'))->toBe(MergeStrategy::Skip)
         ->and($config->getStrategyForAttribute('unknown'))->toBeNull();
 });
 
 it('can check if an attribute should be merged from source', function () {
-    $config = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
+    $config = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
     ]);
 
     expect($config->shouldMergeFromSource('name'))->toBeTrue()
@@ -62,9 +63,9 @@ it('can check if an attribute should be merged from source', function () {
 });
 
 it('can check if an attribute should be kept on target', function () {
-    $config = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
+    $config = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
     ]);
 
     expect($config->shouldKeepOnTarget('email'))->toBeTrue()
@@ -73,9 +74,9 @@ it('can check if an attribute should be kept on target', function () {
 });
 
 it('can check if an attribute should be skipped', function () {
-    $config = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'phone' => MergeMapConfig::SKIP,
+    $config = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'phone' => MergeStrategy::Skip,
     ]);
 
     expect($config->shouldSkip('phone'))->toBeTrue()

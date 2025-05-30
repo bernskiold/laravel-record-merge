@@ -3,7 +3,7 @@
 namespace Bernskiold\LaravelRecordMerge\Jobs;
 
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
-use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
 use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
 use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
@@ -23,7 +23,7 @@ class MergeRecordJob implements ShouldQueue, ShouldBeUnique
         public Mergeable        $source,
         public Mergeable        $target,
         public ?Authenticatable $performedBy = null,
-        public ?MergeMapConfig  $mergeMap = null,
+        public ?MergeConfig     $mergeConfig = null,
     )
     {
         $this->onConnection(config('record-merge.queue.connection', null));
@@ -32,18 +32,14 @@ class MergeRecordJob implements ShouldQueue, ShouldBeUnique
 
     public function handle(): void
     {
-        $recordMerge = RecordMerge::new($this->source, $this->target)
+        RecordMerge::new($this->source, $this->target)
+            ->withMergeConfig($this->mergeConfig)
             ->performedBy($this->performedBy)
             ->afterMerging(function (Mergeable $source, Mergeable $target) {
                 // Dispatch an event after merging the records.
                 event(new RecordMerged($source, $target, $this->performedBy));
-            });
-
-        if ($this->mergeMap) {
-            $recordMerge->withMergeMap($this->mergeMap);
-        }
-
-        $recordMerge->merge();
+            })
+            ->merge();
     }
 
     public function uniqueId(): string

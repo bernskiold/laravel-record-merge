@@ -3,7 +3,8 @@
 use Bernskiold\LaravelRecordMerge\Concerns\SupportsMerging;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
-use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Support\Facades\Bus;
@@ -38,9 +39,9 @@ it('can initiate a merge with a merge map', function () {
     $targetModel = clone $model;
     $targetModel->id = 2;
 
-    $mergeMap = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
+    $mergeMap = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
     ]);
 
     expect($sourceModel->mergeTo($targetModel, $mergeMap))
@@ -81,9 +82,9 @@ it('can perform a preview with a merge map', function () {
     $targetModel = clone $model;
     $targetModel->id = 2;
 
-    $mergeMap = new MergeMapConfig([
-        'name' => MergeMapConfig::SOURCE,
-        'email' => MergeMapConfig::TARGET,
+    $mergeMap = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
     ]);
 
     expect($model->previewMergeTo($targetModel, $mergeMap))
