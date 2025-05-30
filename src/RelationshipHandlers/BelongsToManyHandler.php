@@ -22,7 +22,7 @@ class BelongsToManyHandler implements RelationshipHandler
     {
         /** @var BelongsToMany $sourceRelation */
         $sourceRelation = $source->{$relationshipName}();
-        
+
         /** @var BelongsToMany $targetRelation */
         $targetRelation = $target->{$relationshipName}();
 
