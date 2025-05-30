@@ -15,17 +15,16 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class MergeRecordJob implements ShouldQueue, ShouldBeUnique
+class MergeRecordJob implements ShouldBeUnique, ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, SerializesModels, Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        public Mergeable        $source,
-        public Mergeable        $target,
+        public Mergeable $source,
+        public Mergeable $target,
         public ?Authenticatable $performedBy = null,
-        public ?MergeConfig     $mergeConfig = null,
-    )
-    {
+        public ?MergeConfig $mergeConfig = null,
+    ) {
         $this->onConnection(config('record-merge.queue.connection', null));
         $this->onQueue(config('record-merge.queue.queue'));
     }
@@ -60,8 +59,8 @@ class MergeRecordJob implements ShouldQueue, ShouldBeUnique
     {
         return [
             'record-merge',
-            'source:' . $this->source->getMorphClass() . ':' . $this->source->getKey(),
-            'target:' . $this->target->getMorphClass() . ':' . $this->target->getKey(),
+            'source:'.$this->source->getMorphClass().':'.$this->source->getKey(),
+            'target:'.$this->target->getMorphClass().':'.$this->target->getKey(),
         ];
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 describe('instantiation', function () {
     it('can be instantiated using the constructor without parameters', function () {
-        expect(new RecordMerge())->toBeInstanceOf(RecordMerge::class);
+        expect(new RecordMerge)->toBeInstanceOf(RecordMerge::class);
     });
 
     it('can be instantiated with a source', function () {
@@ -68,11 +68,13 @@ describe('validation', function () {
     })->throws(InvalidRecordMergeException::class, 'No target model was provided for merging into.');
 
     it('throws validation exception if source and target are not the same model', function () {
-        $source = new class extends Model implements Mergeable {
+        $source = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
         };
 
-        $target = new class extends Model implements Mergeable {
+        $target = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
         };
 
@@ -82,7 +84,8 @@ describe('validation', function () {
     })->throws(InvalidRecordMergeException::class);
 
     it('throws validation exception if source and target are the same model', function () {
-        $source = new class extends Model implements Mergeable {
+        $source = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
         };
 
@@ -101,11 +104,13 @@ describe('validation', function () {
 describe('attribute merge checking', function () {
 
     beforeEach(function () {
-        $this->source = new class extends Model implements Mergeable {
+        $this->source = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
         };
 
-        $this->target = new class extends Model implements Mergeable {
+        $this->target = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
         };
     });
@@ -141,7 +146,8 @@ describe('attribute merge checking', function () {
     });
 
     test('attributes denied on the model cannot be merged', function () {
-        $target = new class extends Model implements Mergeable {
+        $target = new class extends Model implements Mergeable
+        {
             use SupportsMerging;
 
             public function getNotMergeableAttributes(): array

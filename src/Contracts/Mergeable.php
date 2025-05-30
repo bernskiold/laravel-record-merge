@@ -2,8 +2,8 @@
 
 namespace Bernskiold\LaravelRecordMerge\Contracts;
 
-use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -13,7 +13,6 @@ use Illuminate\Foundation\Bus\PendingDispatch;
  */
 interface Mergeable
 {
-
     /**
      * Handle the merging of this record with another record of the same type.
      * Because merging can be a complex and time-consuming operation,
@@ -42,5 +41,4 @@ interface Mergeable
      * records that were later removed.
      */
     public function getMergeableLabel(): ?string;
-
 }

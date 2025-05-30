@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 test('no source exception', function () {
     $exception = Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException::noSource();
-    expect($exception->getMessage())->toBe("No source model was provided for merging from.");
+    expect($exception->getMessage())->toBe('No source model was provided for merging from.');
 });
 
 test('no target exception', function () {
     $exception = Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException::noTarget();
-    expect($exception->getMessage())->toBe("No target model was provided for merging into.");
+    expect($exception->getMessage())->toBe('No target model was provided for merging into.');
 });
 
 test('not same model exception', function () {
-    $source = new class extends Model implements Mergeable {
+    $source = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
-    $target = new class extends Model implements Mergeable {
+    $target = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -35,7 +37,8 @@ test('not same model exception', function () {
 });
 
 test('same id exception', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
 
         public function getKey()
@@ -46,7 +49,7 @@ test('same id exception', function () {
 
     $exception = Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException::sameId($model, $model);
 
-    expect($exception->getMessage())->toBe("The source model and the target model are the same.")
+    expect($exception->getMessage())->toBe('The source model and the target model are the same.')
         ->and($exception->getSource())->toBe($model)
         ->and($exception->getTarget())->toBe($model);
 });

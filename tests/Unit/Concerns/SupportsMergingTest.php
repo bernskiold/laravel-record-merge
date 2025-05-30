@@ -2,8 +2,8 @@
 
 use Bernskiold\LaravelRecordMerge\Concerns\SupportsMerging;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
-use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Bus;
 it('can initiate a merge', function () {
     Bus::fake();
 
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -29,7 +30,8 @@ it('can initiate a merge', function () {
 it('can initiate a merge with a merge map', function () {
     Bus::fake();
 
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -49,7 +51,8 @@ it('can initiate a merge with a merge map', function () {
 });
 
 it('returns empty array with not mergeable attributes by default', function () {
-    $model = new class implements Mergeable {
+    $model = new class implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -57,7 +60,8 @@ it('returns empty array with not mergeable attributes by default', function () {
 });
 
 it('can perform a preview', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -72,7 +76,8 @@ it('can perform a preview', function () {
 });
 
 it('can perform a preview with a merge map', function () {
-    $model = new class extends Model implements Mergeable {
+    $model = new class extends Model implements Mergeable
+    {
         use SupportsMerging;
     };
 
@@ -90,4 +95,3 @@ it('can perform a preview with a merge map', function () {
     expect($model->previewMergeTo($targetModel, $mergeMap))
         ->toBeInstanceOf(MergeData::class);
 });
-

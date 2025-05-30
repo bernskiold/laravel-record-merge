@@ -2,6 +2,7 @@
 
 use Bernskiold\LaravelRecordMerge\Tests\Models\Tag;
 use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
+
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 
@@ -20,17 +21,17 @@ it('handles BelongsToMany relationships correctly', function () {
     // Attach tags to source model with pivot data
     $this->sourceModel->tags()->attach($this->tag1->id, [
         'priority' => 10,
-        'notes' => 'Source note 1'
+        'notes' => 'Source note 1',
     ]);
     $this->sourceModel->tags()->attach($this->tag2->id, [
         'priority' => 20,
-        'notes' => 'Source note 2'
+        'notes' => 'Source note 2',
     ]);
 
     // Attach one tag to target model
     $this->targetModel->tags()->attach($this->tag3->id, [
         'priority' => 30,
-        'notes' => 'Target note 3'
+        'notes' => 'Target note 3',
     ]);
 
     // Merge source to target
@@ -66,17 +67,17 @@ it('handles MorphToMany relationships correctly', function () {
     // Attach tags to source model with pivot data
     $this->sourceModel->morphTags()->attach($this->tag1->id, [
         'priority' => 10,
-        'notes' => 'Source morph note 1'
+        'notes' => 'Source morph note 1',
     ]);
     $this->sourceModel->morphTags()->attach($this->tag2->id, [
         'priority' => 20,
-        'notes' => 'Source morph note 2'
+        'notes' => 'Source morph note 2',
     ]);
 
     // Attach one tag to target model
     $this->targetModel->morphTags()->attach($this->tag3->id, [
         'priority' => 30,
-        'notes' => 'Target morph note 3'
+        'notes' => 'Target morph note 3',
     ]);
 
     // Merge source to target

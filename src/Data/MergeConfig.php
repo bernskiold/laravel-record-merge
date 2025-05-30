@@ -17,7 +17,7 @@ class MergeConfig
     /**
      * Create a new merge map configuration.
      *
-     * @param array<string, MergeStrategy> $map
+     * @param  array<string, MergeStrategy>  $map
      */
     public function __construct(array $map = [])
     {
@@ -27,7 +27,7 @@ class MergeConfig
     /**
      * Create a new merge map configuration.
      *
-     * @param array<string, MergeStrategy> $map
+     * @param  array<string, MergeStrategy>  $map
      */
     public static function make(array $map = []): self
     {
@@ -84,4 +84,3 @@ class MergeConfig
         return $this->getStrategyForAttribute($attribute) === MergeStrategy::Skip;
     }
 }
-

@@ -4,7 +4,6 @@ namespace Bernskiold\LaravelRecordMerge\Enums;
 
 enum MergeStrategy: string
 {
-
     case UseSource = 'source';
 
     case UseTarget = 'target';

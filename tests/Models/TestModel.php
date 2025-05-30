@@ -62,4 +62,3 @@ class TestModel extends Model implements Mergeable
         return $this->morphMany(TestModel::class, 'commentable');
     }
 }
-

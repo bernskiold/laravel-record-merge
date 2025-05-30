@@ -2,6 +2,7 @@
 
 use Bernskiold\LaravelRecordMerge\Tests\Models\ModelWithoutRelationships;
 use Bernskiold\LaravelRecordMerge\Tests\Models\SoftDeletableModelWithoutRelationships;
+
 use function Pest\Laravel\assertDatabaseMissing;
 
 it('can be merged', function () {

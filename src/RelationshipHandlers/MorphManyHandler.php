@@ -4,7 +4,6 @@ namespace Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
