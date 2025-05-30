@@ -7,6 +7,7 @@ use Bernskiold\LaravelRecordMerge\Contracts\MergeLogger;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Bernskiold\LaravelRecordMerge\Data\AttributeComparison;
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
 use Bernskiold\LaravelRecordMerge\Data\RelationshipCount;
 use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\Exceptions\RelationshipHandlerException;
@@ -40,6 +41,11 @@ class RecordMerge
      */
     public array $mergeableAttributes = [];
 
+    /**
+     * The merge map configuration.
+     */
+    public ?MergeMapConfig $mergeMap = null;
+
     public function __construct(
         public ?Mergeable       $source = null,
         public ?Mergeable       $target = null,
@@ -55,7 +61,6 @@ class RecordMerge
     {
         return new static($source, $target, $performedBy);
     }
-
 
     /**
      * Preview the merge operation without actually performing it.
@@ -183,6 +188,8 @@ class RecordMerge
      * This will only merge attributes that are not already set on the target model,
      * and will skip any attributes that are null, so that the merge only
      * adds data and does not remove any existing data on the target model.
+     * 
+     * If a merge map is provided, it will be used to determine how to handle each attribute.
      */
     protected function mergeAttributes(): void
     {
@@ -194,9 +201,20 @@ class RecordMerge
         }
 
         foreach ($attributes as $key => $value) {
+            // If we have a merge map and the attribute should be skipped, we skip it.
+            if ($this->mergeMap && $this->mergeMap->shouldSkip($key)) {
+                continue;
+            }
 
-            // If the attribute is already set on the target model, we skip it.
-            if ($this->target->getAttribute($key) !== null) {
+            // If we have a merge map and the attribute should be kept on the target, we skip it.
+            if ($this->mergeMap && $this->mergeMap->shouldKeepOnTarget($key)) {
+                continue;
+            }
+
+            // If the attribute is already set on the target model and we don't have a merge map
+            // or the merge map doesn't specify to merge from source, we skip it.
+            if ($this->target->getAttribute($key) !== null && 
+                (!$this->mergeMap || !$this->mergeMap->shouldMergeFromSource($key))) {
                 continue;
             }
 
@@ -334,6 +352,11 @@ class RecordMerge
      */
     public function canAttributeBeMerged(string $attribute): bool
     {
+        // If we have a merge map and the attribute should be skipped, we don't merge it.
+        if ($this->mergeMap && $this->mergeMap->shouldSkip($attribute)) {
+            return false;
+        }
+
         // If we have a list of allowed attributes, we only merge those.
         if (!empty($this->mergeableAttributes) && !in_array($attribute, $this->mergeableAttributes, true)) {
             return false;
@@ -463,5 +486,15 @@ class RecordMerge
         ));
 
         return $this->allowedAttributes($attributes);
+    }
+
+    /**
+     * Set the merge map configuration.
+     */
+    public function withMergeMap(MergeMapConfig $mergeMap): static
+    {
+        $this->mergeMap = $mergeMap;
+
+        return $this;
     }
 }

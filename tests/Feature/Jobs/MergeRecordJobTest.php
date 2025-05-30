@@ -1,6 +1,7 @@
 <?php
 
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
+use Bernskiold\LaravelRecordMerge\Data\MergeMapConfig;
 use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
 use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
@@ -32,6 +33,21 @@ it('can be constructed with performer', function () {
     expect($job->source)->toBe($source)
         ->and($job->target)->toBe($target)
         ->and($job->performedBy)->toBe($performer)
+        ->and($job->queue)->toBe(config('record-merge.queue.queue'))
+        ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
+});
+
+it('can be constructed with merge map', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+    $mergeMap = new MergeMapConfig(['name' => MergeMapConfig::SOURCE]);
+
+    $job = new MergeRecordJob($source, $target, null, $mergeMap);
+
+    expect($job->source)->toBe($source)
+        ->and($job->target)->toBe($target)
+        ->and($job->performedBy)->toBeNull()
+        ->and($job->mergeMap)->toBe($mergeMap)
         ->and($job->queue)->toBe(config('record-merge.queue.queue'))
         ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
 });
@@ -95,6 +111,26 @@ it('performs the job', function () {
     $performer = mock(User::class);
 
     $job = new MergeRecordJob($source, $target, $performer);
+
+    $job->handle();
+
+    Event::assertDispatched(RecordMerged::class, function ($event) use ($source, $target, $performer) {
+        return $event->source === $source &&
+            $event->target === $target &&
+            $event->performedBy === $performer;
+    });
+});
+
+it('performs the job with merge map', function () {
+    Event::fake();
+
+    $source = TestModel::create(['name' => 'One']);
+    $target = TestModel::create(['name' => 'Two']);
+    $mergeMap = new MergeMapConfig(['name' => MergeMapConfig::SOURCE]);
+
+    $performer = mock(User::class);
+
+    $job = new MergeRecordJob($source, $target, $performer, $mergeMap);
 
     $job->handle();
 
