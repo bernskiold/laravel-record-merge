@@ -10,55 +10,33 @@ use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Bernskiold\LaravelRecordMerge\Data\RelationshipCount;
 use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\Exceptions\RelationshipHandlerException;
-use Bernskiold\LaravelRecordMerge\RelationshipHandlers\BelongsToManyHandler;
-use Bernskiold\LaravelRecordMerge\RelationshipHandlers\HasManyHandler;
-use Bernskiold\LaravelRecordMerge\RelationshipHandlers\HasOneHandler;
-use Bernskiold\LaravelRecordMerge\RelationshipHandlers\MorphManyHandler;
-use Bernskiold\LaravelRecordMerge\RelationshipHandlers\MorphToManyHandler;
 use Closure;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
-use function method_exists;
-use function trait_exists;
 
 class RecordMerge
 {
 
-    public static array $defaultHandlers = [
-        HasMany::class => HasManyHandler::class,
-        HasOne::class => HasOneHandler::class,
-        BelongsToMany::class => BelongsToManyHandler::class,
-        BelongsTo::class => false,
-        HasOneThrough::class => false,
-        HasManyThrough::class => false,
-        HasOneOrManyThrough::class => false,
-        MorphTo::class => false,
-        MorphMany::class => MorphManyHandler::class,
-        MorphToMany::class => MorphToManyHandler::class,
-    ];
-
+    /**
+     * Callback to execute after the merging is complete.
+     */
     protected ?Closure $afterMergingCallback = null;
 
     public function __construct(
-        protected ?Mergeable $source = null,
-        protected ?Mergeable $target = null,
+        protected ?Mergeable       $source = null,
+        protected ?Mergeable       $target = null,
+        protected ?Authenticatable $performedBy = null,
     )
     {
     }
 
+    /**
+     * Create a new record merge instance.
+     */
     public static function new(?Mergeable $source = null, ?Mergeable $target = null): static
     {
         return new static($source, $target);
@@ -66,6 +44,11 @@ class RecordMerge
 
 
     /**
+     * Preview the merge operation without actually performing it.
+     *
+     * This is useful to see what will happen during the merge,
+     * and show this to the user before they confirm the merge.
+     *
      * @throws InvalidRecordMergeException
      */
     public function preview(): MergeData
@@ -80,6 +63,17 @@ class RecordMerge
         );
     }
 
+    /**
+     * Perform the merge operation.
+     *
+     * This will merge the source model into the target model,
+     * updating the target model with the source model's attributes
+     * and reassign the source model's relationships to the target model.
+     *
+     * @throws InvalidRecordMergeException
+     * @throws RelationshipHandlerException
+     * @throws Throwable
+     */
     public function merge(): Mergeable
     {
         $details = $this->preview();
@@ -87,12 +81,12 @@ class RecordMerge
         DB::beginTransaction();
 
         try {
-            $this->updateRelationships();
+            $this->reassignRelationships();
             $this->log($details);
 
             // Call the after merging callback if it exists.
             if ($this->afterMergingCallback) {
-                ($this->afterMergingCallback)($this->source, $this->target);
+                ($this->afterMergingCallback)($this->source, $this->target, $this->performedBy);
             }
 
             DB::commit();
@@ -104,17 +98,22 @@ class RecordMerge
         }
     }
 
-    protected function validate(): void
+    /**
+     * Validates the settings for the merge.
+     *
+     * @throws InvalidRecordMergeException
+     */
+    public function validate(): void
     {
-        $targetClass = get_class($this->target);
-
         if ($this->source === null) {
-            throw new InvalidArgumentException('The source model is not set.');
+            throw InvalidRecordMergeException::noSource();
         }
 
         if ($this->target === null) {
-            throw new InvalidArgumentException('The target model is not set.');
+            throw InvalidRecordMergeException::noTarget();
         }
+
+        $targetClass = get_class($this->target);
 
         if (!$this->source instanceof $targetClass) {
             throw InvalidRecordMergeException::notSameModel($this->source, $this->target);
@@ -160,25 +159,33 @@ class RecordMerge
     }
 
     /**
+     * Returns the amount of relationship models that
+     * will be reassigned during the merge.
+     *
      * @return array<string, RelationshipCount>
      */
     protected function getCountByRelationship(): array
     {
-        $relationships = static::getRelationshipsForModel($this->source);
-
-        $counts = [];
-
-        foreach ($relationships as $relationship) {
-            $counts[$relationship] = new RelationshipCount(
-                relationship: $relationship,
-                sourceCount: $this->source->{$relationship}()->count(),
-                targetCount: $this->target->{$relationship}()->count(),
-            );
-        }
-
-        return $counts;
+        return collect(static::getRelationshipsForModel($this->source))
+            ->mapWithKeys(function ($relationship) {
+                return [
+                    $relationship => new RelationshipCount(
+                        relationship: $relationship,
+                        sourceCount: $this->source->{$relationship}()->count(),
+                        targetCount: $this->target->{$relationship}()->count(),
+                    ),
+                ];
+            })
+            ->all();
     }
 
+    /**
+     * Get all the relationships defined on the model.
+     *
+     * This will return an array of relationship method names
+     * that are defined on the model. Relationships are
+     * auto-discovered if they extend "Relation".
+     */
     protected static function getRelationshipsForModel(Mergeable $model): array
     {
         $reflection = new \ReflectionClass($model);
@@ -216,7 +223,15 @@ class RecordMerge
         return $relationships;
     }
 
-    protected function updateRelationships(): void
+    /**
+     * Reassign the relationships from the source model to the target model.
+     *
+     * This will loop through all the relationships defined on the source model,
+     * and use the appropriate handler to reassign them to the target model.
+     *
+     * @throws RelationshipHandlerException
+     */
+    protected function reassignRelationships(): void
     {
         $relationships = static::getRelationshipsForModel($this->source);
 
@@ -238,26 +253,32 @@ class RecordMerge
         }
     }
 
+    /**
+     * Get the handler for a given relationship.
+     *
+     * This will return an instance of the handler if it exists,
+     * or null if no handler is defined.
+     */
     protected function getHandlerForRelationship(Relation $relation): RelationshipHandler|false|null
     {
-        $configuredHandlers = config('record-merge.relationship_handlers', []);
-        $handlers = array_merge(static::$defaultHandlers, $configuredHandlers);
+        $handlers = config('record-merge.relationship_handlers', []);
         $class = get_class($relation);
-
 
         $handler = $handlers[$class] ?? null;
 
-        if ($handler === null) {
+        // If the handler is not defined, or is explicitly excluded, don't handle.
+        if ($handler === null || $handler === false) {
             return null;
-        }
-
-        if ($handler === false) {
-            return false;
         }
 
         return new $handler();
     }
 
+    /**
+     * Log the details of the merge operating.
+     *
+     * This will use the configured loggers to log the merge details.
+     */
     protected function log(MergeData $details): void
     {
         $loggers = config('record-merge.loggers', []);
@@ -266,10 +287,13 @@ class RecordMerge
          * @var class-string<MergeLogger> $logger
          */
         foreach ($loggers as $logger) {
-            (new $logger)->log($this->source, $this->target, $details);
+            (new $logger)->log($this->source, $this->target, $details, $this->performedBy);
         }
     }
 
+    /**
+     * Set the model that you want to merge from (ie. not keep).
+     */
     public function from(Mergeable $source): static
     {
         $this->source = $source;
@@ -277,6 +301,9 @@ class RecordMerge
         return $this;
     }
 
+    /**
+     * Set the model that you want to merge into (ie. keep).
+     */
     public function to(Mergeable $target): static
     {
         $this->target = $target;
@@ -284,9 +311,24 @@ class RecordMerge
         return $this;
     }
 
+    /**
+     * Execute code after the merging process is complete.
+     * This is useful for additional cleanup or actions after the merge.
+     *
+     * The callback will receive the source and target models as parameters.
+     *
+     * @param Closure(Mergeable $source, Mergeable $target, ?Authenticatable $performedBy): void $callback
+     */
     public function afterMerging(Closure $callback): static
     {
         $this->afterMergingCallback = $callback;
+
+        return $this;
+    }
+
+    public function performedBy(Authenticatable $user): static
+    {
+        $this->performedBy = $user;
 
         return $this;
     }
