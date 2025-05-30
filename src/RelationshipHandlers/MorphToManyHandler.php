@@ -21,7 +21,7 @@ class MorphToManyHandler implements RelationshipHandler
     {
         /** @var MorphToMany $sourceRelation */
         $sourceRelation = $source->$relationshipName();
-        
+
         /** @var MorphToMany $targetRelation */
         $targetRelation = $target->$relationshipName();
 
