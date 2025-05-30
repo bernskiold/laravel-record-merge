@@ -22,9 +22,12 @@ class BelongsToManyHandler implements RelationshipHandler
     {
         /**
          * @var BelongsToMany $sourceRelation
-         * @var BelongsToMany $targetRelation
          */
         $sourceRelation = $source->{$relationshipName}();
+
+        /**
+         * @var BelongsToMany $targetRelation
+         */
         $targetRelation = $target->{$relationshipName}();
 
         $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();

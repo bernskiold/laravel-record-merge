@@ -30,6 +30,9 @@ use Throwable;
 use function array_merge;
 use function in_array;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class RecordMerge
 {
     use Conditionable,
@@ -102,7 +105,7 @@ class RecordMerge
      * @throws RelationshipHandlerException
      * @throws Throwable
      */
-    public function merge(): Mergeable
+    public function merge(): ?Model
     {
         $details = $this->preview();
 
@@ -165,12 +168,12 @@ class RecordMerge
 
         return collect(array_keys($sourceAttributes))
             ->merge(array_keys($targetAttributes))
-            ->filter(fn ($value, $key) => $this->canAttributeBeMerged($key))
-            ->mapWithKeys(function ($value, $key) {
+            ->filter(fn ($attribute) => $this->canAttributeBeMerged($attribute))
+            ->mapWithKeys(function ($attribute) {
                 return [
-                    $key => new AttributeComparison(
-                        sourceValue: $this->source->getAttribute($key),
-                        targetValue: $this->target->getAttribute($key),
+                    $attribute => new AttributeComparison(
+                        sourceValue: $this->source->getAttribute($attribute),
+                        targetValue: $this->target->getAttribute($attribute),
                     ),
                 ];
             })
@@ -283,7 +286,7 @@ class RecordMerge
             $returnType = $method->getReturnType();
 
             // If no return type is defined, we can't determine if it's a relation
-            if (! $returnType) {
+            if (! $returnType instanceof \ReflectionNamedType) {
                 continue;
             }
 
@@ -400,7 +403,7 @@ class RecordMerge
         }
 
         // For soft deletes, we do not allow the deleted_at attribute to be merged.
-        if (method_exists($this->source, 'bootSoftDeletes') && $attribute === $this->source->getDeletedAtColumn()) {
+        if (method_exists($this->source, 'getDeletedAtColumn') && $attribute === $this->source->getDeletedAtColumn()) {
             return false;
         }
 

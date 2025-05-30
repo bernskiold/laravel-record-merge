@@ -14,11 +14,11 @@ class SpatieActivityLogMergeLogger implements MergeLogger
 {
     public function log(Mergeable $source, Mergeable $target, ?MergeData $data = null, ?Authenticatable $performedBy = null): void
     {
-        if (! trait_exists('Spatie\Activitylog\Trait\LogsActivity')) {
+        if (!trait_exists('Spatie\Activitylog\Trait\LogsActivity')) {
             return;
         }
 
-        if (! method_exists($source, 'activity')) {
+        if (!function_exists('activity')) {
             return;
         }
 
