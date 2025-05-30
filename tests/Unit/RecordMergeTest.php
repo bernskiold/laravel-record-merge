@@ -140,20 +140,6 @@ describe('attribute merge checking', function () {
         expect($allowed)->toBeFalse();
     });
 
-    test('an attribute ending in _id cannot be merged', function () {
-        $allowed = RecordMerge::new($this->source, $this->target)
-            ->canAttributeBeMerged('user_id');
-
-        expect($allowed)->toBeFalse();
-    });
-
-    test('an attribute ending in _type cannot be merged', function () {
-        $allowed = RecordMerge::new($this->source, $this->target)
-            ->canAttributeBeMerged('user_type');
-
-        expect($allowed)->toBeFalse();
-    });
-
     test('attributes denied on the model cannot be merged', function () {
         $target = new class extends Model implements Mergeable {
             use SupportsMerging;

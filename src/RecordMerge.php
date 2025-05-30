@@ -14,6 +14,7 @@ use Bernskiold\LaravelRecordMerge\Exceptions\RelationshipHandlerException;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -334,14 +335,25 @@ class RecordMerge
      */
     protected function getHandlerForRelationship(Relation $relation): RelationshipHandler|false|null
     {
-        $handlers = config('record-merge.relationship_handlers', []);
+        $defaultHandlers = [
+            BelongsTo::class => false,
+        ];
+
+        $handlers = config('record-merge.handlers', []);
+        $handlers = array_merge($defaultHandlers, $handlers);
+
         $class = get_class($relation);
 
         $handler = Arr::get($handlers, $class);
 
-        // If the handler is not defined, or is explicitly excluded, don't handle.
-        if ($handler === null || $handler === false) {
+        // If the handler is not defined, return null.
+        if ($handler === null) {
             return null;
+        }
+
+        // If the handler is false, we don't handle this relationship.
+        if ($handler === false) {
+            return false;
         }
 
         return new $handler();
@@ -379,12 +391,6 @@ class RecordMerge
 
         // For soft deletes, we do not allow the deleted_at attribute to be merged.
         if (method_exists($this->source, 'bootSoftDeletes') && $attribute === $this->source->getDeletedAtColumn()) {
-            return false;
-        }
-
-        // We do not allow attributes that are relationships to be merged.
-        // They will be handled by the relationship handlers.
-        if (str_ends_with($attribute, '_id') || str_ends_with($attribute, '_type')) {
             return false;
         }
 
