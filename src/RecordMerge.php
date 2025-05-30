@@ -14,6 +14,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
@@ -150,8 +151,8 @@ class RecordMerge
             }
 
             $comparison[$key] = new AttributeComparison(
-                sourceValue: $sourceAttributes[$key] ?? null,
-                targetValue: $targetAttributes[$key] ?? null,
+                sourceValue: Arr::get($sourceAttributes, $key),
+                targetValue: Arr::get($targetAttributes, $key),
             );
         }
 
@@ -264,7 +265,7 @@ class RecordMerge
         $handlers = config('record-merge.relationship_handlers', []);
         $class = get_class($relation);
 
-        $handler = $handlers[$class] ?? null;
+        $handler = Arr::get($handlers, $class);
 
         // If the handler is not defined, or is explicitly excluded, don't handle.
         if ($handler === null || $handler === false) {

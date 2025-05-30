@@ -41,10 +41,14 @@ class MergeRecordJob implements ShouldQueue, ShouldBeUnique
 
     public function uniqueId(): string
     {
-        return $this->source->getKey() . '-' . $this->target->getKey();
+        return str($this->source->getMorphClass())
+            ->append(':', $this->source->getKey())
+            ->append('-', $this->target->getMorphClass())
+            ->append(':', $this->target->getKey())
+            ->toString();
     }
 
-    public function fail($exception = null)
+    public function fail($exception = null): void
     {
         event(new RecordMergeFailed($this->source, $this->target, $this->performedBy, $exception));
     }

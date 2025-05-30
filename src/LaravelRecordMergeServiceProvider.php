@@ -11,10 +11,10 @@ class LaravelRecordMergeServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        AboutCommand::add('Laravel Record Merge', fn () => ['Version' => '1.0.0']);
+        AboutCommand::add('Laravel Record Merge', fn() => ['Version' => '1.0.0']);
 
         $this->publishes([
-            __DIR__.'/../config/record-merge.php' => config_path('record-merge.php'),
+            __DIR__ . '/../config/record-merge.php' => config_path('record-merge.php'),
         ], 'config');
     }
 

@@ -6,27 +6,36 @@ use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+/**
+ * Handles merging of MorphToMany relationships.
+ *
+ * This class is responsible for merging MorphToMany relationships between two models.
+ * It detaches existing relations from the source model and attaches them to the target model,
+ * ensuring that pivot data is preserved.
+ */
 class MorphToManyHandler implements RelationshipHandler
 {
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
         /**
-         * @var MorphToMany $relation
+         * @var MorphToMany $sourceRelation
+         * @var MorphToMany $targetRelation
          */
-        $relation = $source->$relationshipName();
+        $sourceRelation = $source->$relationshipName();
+        $targetRelation = $target->$relationshipName();
 
-        $morphType = $relation->getMorphType();
-        $foreignPivotKey = $relation->getForeignPivotKeyName();
-        $relatedPivotKey = $relation->getRelatedPivotKeyName();
+        $morphType = $sourceRelation->getMorphType();
+        $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();
+        $relatedPivotKey = $sourceRelation->getRelatedPivotKeyName();
 
         // Get all the related model IDs with their pivot data
-        $relatedModels = $relation->withPivot($relation->getPivotColumns())->get();
+        $relatedModels = $sourceRelation->withPivot($sourceRelation->getPivotColumns())->get();
 
         // Detach all relations from the old model
-        $relation->detach();
+        $sourceRelation->detach();
 
         // Get existing relations from the target model
-        $existingRelations = $target->$relationshipName()->pluck($relatedPivotKey)->toArray();
+        $existingRelations = $targetRelation->pluck($relatedPivotKey)->toArray();
 
         // Process each related model
         foreach ($relatedModels as $relatedModel) {
@@ -39,14 +48,15 @@ class MorphToManyHandler implements RelationshipHandler
 
             // Get pivot data for this relation
             $pivotData = [];
-            foreach ($relation->getPivotColumns() as $column) {
+
+            foreach ($sourceRelation->getPivotColumns() as $column) {
                 if ($column !== $foreignPivotKey && $column !== $relatedPivotKey && $column !== $morphType) {
-                    $pivotData[$column] = $relatedModel->pivot->{$column};
+                    $pivotData[$column] = data_get($relatedModel, "pivot.{$column}");
                 }
             }
 
             // Attach with pivot data
-            $target->$relationshipName()->attach($relatedId, $pivotData);
+            $targetRelation->attach($relatedId, $pivotData);
         }
     }
 }
