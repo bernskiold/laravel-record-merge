@@ -20,11 +20,10 @@ class BelongsToManyHandler implements RelationshipHandler
 {
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
-        /**
-         * @var BelongsToMany $sourceRelation
-         * @var BelongsToMany $targetRelation
-         */
+        /** @var BelongsToMany $sourceRelation */
         $sourceRelation = $source->{$relationshipName}();
+        
+        /** @var BelongsToMany $targetRelation */
         $targetRelation = $target->{$relationshipName}();
 
         $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();

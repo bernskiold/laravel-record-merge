@@ -5,6 +5,7 @@ namespace Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use function data_get;
 
 /**
  * Handles merging of MorphToMany relationships.
@@ -17,11 +18,10 @@ class MorphToManyHandler implements RelationshipHandler
 {
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
-        /**
-         * @var MorphToMany $sourceRelation
-         * @var MorphToMany $targetRelation
-         */
+        /** @var MorphToMany $sourceRelation */
         $sourceRelation = $source->$relationshipName();
+        
+        /** @var MorphToMany $targetRelation */
         $targetRelation = $target->$relationshipName();
 
         $morphType = $sourceRelation->getMorphType();
