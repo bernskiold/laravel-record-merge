@@ -3,6 +3,8 @@
 use Bernskiold\LaravelRecordMerge\Concerns\SupportsMerging;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Support\Facades\Bus;
@@ -21,6 +23,28 @@ it('can initiate a merge', function () {
     $targetModel->id = 2;
 
     expect($sourceModel->mergeTo($targetModel))
+        ->toBeInstanceOf(PendingDispatch::class);
+});
+
+it('can initiate a merge with a merge map', function () {
+    Bus::fake();
+
+    $model = new class extends Model implements Mergeable {
+        use SupportsMerging;
+    };
+
+    $sourceModel = clone $model;
+    $sourceModel->id = 1;
+
+    $targetModel = clone $model;
+    $targetModel->id = 2;
+
+    $mergeMap = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
+    ]);
+
+    expect($sourceModel->mergeTo($targetModel, $mergeMap))
         ->toBeInstanceOf(PendingDispatch::class);
 });
 
@@ -46,3 +70,24 @@ it('can perform a preview', function () {
     expect($model->previewMergeTo($targetModel))
         ->toBeInstanceOf(MergeData::class);
 });
+
+it('can perform a preview with a merge map', function () {
+    $model = new class extends Model implements Mergeable {
+        use SupportsMerging;
+    };
+
+    $sourceModel = clone $model;
+    $sourceModel->id = 1;
+
+    $targetModel = clone $model;
+    $targetModel->id = 2;
+
+    $mergeMap = new MergeConfig([
+        'name' => MergeStrategy::UseSource,
+        'email' => MergeStrategy::UseTarget,
+    ]);
+
+    expect($model->previewMergeTo($targetModel, $mergeMap))
+        ->toBeInstanceOf(MergeData::class);
+});
+

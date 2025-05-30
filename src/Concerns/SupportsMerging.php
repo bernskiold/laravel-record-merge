@@ -3,6 +3,7 @@
 namespace Bernskiold\LaravelRecordMerge\Concerns;
 
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
 use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
@@ -33,9 +34,9 @@ trait SupportsMerging
      * Handle the merging of this record with
      * another record of the same type.
      */
-    public function mergeTo(Mergeable $target): PendingDispatch|PendingClosureDispatch
+    public function mergeTo(Mergeable $target, ?MergeConfig $mergeConfig = null): PendingDispatch|PendingClosureDispatch
     {
-        return dispatch(new MergeRecordJob($this, $target, auth()->user()));
+        return dispatch(new MergeRecordJob($this, $target, auth()->user(), $mergeConfig));
     }
 
     /**
@@ -48,13 +49,11 @@ trait SupportsMerging
      *
      * @throws InvalidRecordMergeException
      */
-    public function previewMergeTo(Mergeable $target): MergeData
+    public function previewMergeTo(Mergeable $target, ?MergeConfig $mergeConfig = null): MergeData
     {
-        /**
-         * @var Mergeable $this
-         */
-
-        return RecordMerge::new($this, $target)->preview();
+        return RecordMerge::new($this, $target)
+            ->withMergeConfig($mergeConfig)
+            ->preview();
     }
 
     /**

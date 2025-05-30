@@ -1,10 +1,13 @@
 <?php
 
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
+use Bernskiold\LaravelRecordMerge\Enums\MergeStrategy;
 use Bernskiold\LaravelRecordMerge\Events\RecordMerged;
 use Bernskiold\LaravelRecordMerge\Events\RecordMergeFailed;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
+use Bernskiold\LaravelRecordMerge\Tests\Models\ModelWithoutRelationships;
 use Bernskiold\LaravelRecordMerge\Tests\Models\TestModel;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Event;
@@ -32,6 +35,21 @@ it('can be constructed with performer', function () {
     expect($job->source)->toBe($source)
         ->and($job->target)->toBe($target)
         ->and($job->performedBy)->toBe($performer)
+        ->and($job->queue)->toBe(config('record-merge.queue.queue'))
+        ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
+});
+
+it('can be constructed with merge map', function () {
+    $source = mock(Mergeable::class);
+    $target = mock(Mergeable::class);
+    $mergeMap = new MergeConfig(['name' => MergeStrategy::UseSource]);
+
+    $job = new MergeRecordJob($source, $target, null, $mergeMap);
+
+    expect($job->source)->toBe($source)
+        ->and($job->target)->toBe($target)
+        ->and($job->performedBy)->toBeNull()
+        ->and($job->mergeConfig)->toBe($mergeMap)
         ->and($job->queue)->toBe(config('record-merge.queue.queue'))
         ->and($job->connection)->toBe(config('record-merge.queue.connection', null));
 });
@@ -89,12 +107,32 @@ it('can generate tags', function () {
 it('performs the job', function () {
     Event::fake();
 
-    $source = TestModel::create(['name' => 'One']);
-    $target = TestModel::create(['name' => 'Two']);
+    $source = ModelWithoutRelationships::create(['name' => 'One']);
+    $target = ModelWithoutRelationships::create(['name' => 'Two']);
 
     $performer = mock(User::class);
 
     $job = new MergeRecordJob($source, $target, $performer);
+
+    $job->handle();
+
+    Event::assertDispatched(RecordMerged::class, function ($event) use ($source, $target, $performer) {
+        return $event->source === $source &&
+            $event->target === $target &&
+            $event->performedBy === $performer;
+    });
+});
+
+it('performs the job with merge map', function () {
+    Event::fake();
+
+    $source = ModelWithoutRelationships::create(['name' => 'One']);
+    $target = ModelWithoutRelationships::create(['name' => 'Two']);
+    $mergeMap = new MergeConfig(['name' => MergeStrategy::UseSource]);
+
+    $performer = mock(User::class);
+
+    $job = new MergeRecordJob($source, $target, $performer, $mergeMap);
 
     $job->handle();
 

@@ -3,6 +3,7 @@
 namespace Bernskiold\LaravelRecordMerge\Contracts;
 
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Data\MergeConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -18,14 +19,14 @@ interface Mergeable
      * Because merging can be a complex and time-consuming operation,
      * this method be run as a job.
      */
-    public function mergeTo(Mergeable $target): PendingDispatch|PendingClosureDispatch;
+    public function mergeTo(Mergeable $target, ?MergeConfig $mergeConfig = null): PendingDispatch|PendingClosureDispatch;
 
     /**
      * Preview the merge of this record with another record of the same type.
      * This lets you see how the merge would affect the target record
      * and any relationships before actually performing the merge.
      */
-    public function previewMergeTo(Mergeable $target): MergeData;
+    public function previewMergeTo(Mergeable $target, ?MergeConfig $mergeConfig = null): MergeData;
 
     /**
      * Attributes that should not be merged.
