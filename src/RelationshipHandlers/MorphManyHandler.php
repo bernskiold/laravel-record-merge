@@ -7,9 +7,14 @@ use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * Handles the merging of a MorphMany relationship.
+ *
+ * This class updates the foreign key of the MorphMany relationship
+ * to point to the target record's local key.
+ */
 class MorphManyHandler implements RelationshipHandler
 {
-
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
         /**
@@ -25,5 +30,4 @@ class MorphManyHandler implements RelationshipHandler
             $morphType => $target->getMorphClass(),
         ]);
     }
-
 }

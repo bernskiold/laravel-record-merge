@@ -1,13 +1,15 @@
 <?php
 
 use Bernskiold\LaravelRecordMerge\Loggers\SpatieActivityLogMergeLogger;
+use Illuminate\Database\Eloquent\Relations;
+use Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 
 return [
 
     /**
-     * Custom Relationship Handlers.
+     * Relationship Handlers.
      *
-     * You can define custom relationship handlers here. These are classes that implement
+     * You can define relationship handlers here. These are classes that implement
      * the RelationshipHandler interface and are responsible for handling the
      * merging of specific relationships.
      *
@@ -15,7 +17,11 @@ return [
      * and the value is the fully qualified class name of the handler.
      */
     'handlers' => [
-        // 'Illuminate\Database\Eloquent\Relations\HasMany' => 'App\RelationshipHandlers\CustomHasManyHandler',
+        Relations\HasMany::class => RelationshipHandlers\HasManyHandler::class,
+        Relations\HasOne::class => RelationshipHandlers\HasOneHandler::class,
+        Relations\BelongsToMany::class => RelationshipHandlers\BelongsToManyHandler::class,
+        Relations\MorphMany::class => RelationshipHandlers\MorphManyHandler::class,
+        Relations\MorphToMany::class => RelationshipHandlers\MorphToManyHandler::class,
     ],
 
     /**
@@ -33,7 +39,17 @@ return [
     ],
 
     'queue' => [
+
+        /**
+         * The connection to use for the queue.
+         *
+         * Set this to null to use the default connection.
+         */
+        'connection' => null,
+
+        /**
+         * The queue to dispatch the merge jobs to.
+         */
         'queue' => 'default',
     ],
-
 ];

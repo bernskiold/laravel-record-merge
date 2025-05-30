@@ -15,6 +15,9 @@ class TestCase extends Orchestra
         Factory::guessFactoryNamesUsing(
             fn (string $modelName) => 'Bernskiold\\LaravelRecordMerge\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
+
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+        $this->artisan('migrate')->run();
     }
 
     protected function getPackageProviders($app)
@@ -27,5 +30,10 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
     }
 }

@@ -5,38 +5,60 @@ namespace Bernskiold\LaravelRecordMerge\RelationshipHandlers;
 use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Contracts\RelationshipHandler;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
+use function data_get;
 
+/**
+ * Handles merging of BelongsToMany relationships.
+ *
+ * This handler will detach all existing relations from the source model
+ * and attach the related models to the target model, preserving pivot data.
+ *
+ * It will skip any relations that already exist on the target model.
+ */
 class BelongsToManyHandler implements RelationshipHandler
 {
-
-    /**
-     * @todo Add support for pivot columns.
-     */
     public function handle(Mergeable $source, Mergeable $target, string $relationshipName): void
     {
         /**
-         * @var BelongsToMany $relation
+         * @var BelongsToMany $sourceRelation
+         * @var BelongsToMany $targetRelation
          */
-        $relation = $source->$relationshipName();
+        $sourceRelation = $source->{$relationshipName}();
+        $targetRelation = $target->{$relationshipName}();
 
-        $pivotTable = $relation->getTable();
-        $foreignPivotKey = $relation->getForeignPivotKeyName();
-        $relatedPivotKey = $relation->getRelatedPivotKeyName();
+        $foreignPivotKey = $sourceRelation->getForeignPivotKeyName();
+        $relatedPivotKey = $sourceRelation->getRelatedPivotKeyName();
 
-        // Get all the related model IDs.
-        $relatedIds = $relation->pluck($relatedPivotKey)->toArray();
+        // Get all the related model IDs with their pivot data
+        $relatedModels = $sourceRelation->withPivot($sourceRelation->getPivotColumns())->get();
 
-        // Detach all relations from the old model.
-        $relation->detach();
+        // Detach all relations from the old model
+        $sourceRelation->detach();
 
-        // Attach the relations to the target model and avoid duplicates.
-        $existingRelations = $target->$relationshipName()->pluck($relatedPivotKey)->toArray();
-        $relationsToAdd = array_diff($relatedIds, $existingRelations);
+        // Get existing relations from the target model
+        $existingRelations = $targetRelation->pluck($relatedPivotKey)->toArray();
 
-        if (!empty($relationsToAdd)) {
-            $target->$relationshipName()->attach($relationsToAdd);
+        // Process each related model
+        foreach ($relatedModels as $relatedModel) {
+            $relatedId = $relatedModel->getKey();
+
+            // Skip if this relation already exists on the target
+            if (in_array($relatedId, $existingRelations)) {
+                continue;
+            }
+
+            // Get pivot data for this relation
+            $pivotData = [];
+
+            foreach ($sourceRelation->getPivotColumns() as $column) {
+                if ($column !== $foreignPivotKey && $column !== $relatedPivotKey) {
+                    $pivotData[$column] = data_get($relatedModel, "pivot.{$column}");
+                }
+            }
+
+            // Attach with pivot data
+            $targetRelation->attach($relatedId, $pivotData);
         }
     }
-
 }

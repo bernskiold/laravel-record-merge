@@ -8,9 +8,25 @@ use Exception;
 class InvalidRecordMergeException extends Exception
 {
 
-    protected Mergeable $source;
+    /**
+     * The source model that was attempted to be merged.
+     */
+    protected ?Mergeable $source = null;
 
-    protected Mergeable $target;
+    /**
+     * The target model that was attempted to merge the source into.
+     */
+    protected ?Mergeable $target = null;
+
+    public static function noSource(): self
+    {
+        return new self("No source model was provided for merging from.");
+    }
+
+    public static function noTarget(): self
+    {
+        return new self("No target model was provided for merging into.");
+    }
 
     public static function notSameModel(Mergeable $source, Mergeable $target): self
     {
@@ -33,12 +49,18 @@ class InvalidRecordMergeException extends Exception
         return $instance;
     }
 
-    public function getSource(): Mergeable
+    /**
+     * Get the source model that was attempted to be merged.
+     */
+    public function getSource(): ?Mergeable
     {
         return $this->source;
     }
 
-    public function getTarget(): Mergeable
+    /**
+     * Get the target model that was attempted to merge the source into.
+     */
+    public function getTarget(): ?Mergeable
     {
         return $this->target;
     }

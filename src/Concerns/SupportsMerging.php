@@ -3,12 +3,29 @@
 namespace Bernskiold\LaravelRecordMerge\Concerns;
 
 use Bernskiold\LaravelRecordMerge\Data\MergeData;
+use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\Jobs\MergeRecordJob;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
 use \Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
 
+/**
+ * Supports Merging
+ *
+ * This trait provides common functionality for the record merging
+ * mechanism to fulfil the Mergeable contract.
+ *
+ * It should be used ion any Eloquent model that needs to support
+ * merging with another record of the same type.
+ *
+ * It provides both a method to perform the merge and a method
+ * to preview the merge before it is executed.
+ *
+ * @mixin Model
+ * @implements Mergeable
+ */
 trait SupportsMerging
 {
 
@@ -18,10 +35,7 @@ trait SupportsMerging
      */
     public function mergeTo(Mergeable $target): PendingDispatch|PendingClosureDispatch
     {
-        /**
-         * @var Mergeable $this
-         */
-        return dispatch(new MergeRecordJob($this, $target));
+        return dispatch(new MergeRecordJob($this, $target, auth()->user()));
     }
 
     /**
@@ -31,6 +45,8 @@ trait SupportsMerging
      * The output is a MergeData object that contains
      * the details of how the merge would affect the
      * target record as well as any relationships.
+     *
+     * @throws InvalidRecordMergeException
      */
     public function previewMergeTo(Mergeable $target): MergeData
     {
@@ -42,17 +58,11 @@ trait SupportsMerging
     }
 
     /**
-     * Update the records after merging.
-     *
-     * This method is called as part of the merge process and
-     * can be overridden in the child class to perform
-     * any actions after merging.
-     *
-     * For example, you might want to deprecate or delete
-     * the source record after merging.
+     * Attributes that should not be merged.
+     * This method should return an array of attribute names that.
      */
-    protected static function updateAfterMerging(Mergeable $source, Mergeable $target): void
+    public function getNotMergeableAttributes(): array
     {
-        //
+        return [];
     }
 }
