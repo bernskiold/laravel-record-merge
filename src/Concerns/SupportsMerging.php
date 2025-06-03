@@ -11,6 +11,8 @@ use Bernskiold\LaravelRecordMerge\RecordMerge;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
+use Illuminate\Support\Collection;
+use function method_exists;
 
 /**
  * Supports Merging
@@ -78,5 +80,33 @@ trait SupportsMerging
     public function getMergeableLabel(): ?string
     {
         return $this->name ?? $this->label ?? $this->title ?? $this->getKey();
+    }
+
+    /**
+     * Get the possible records for merging based on a search term.
+     *
+     * This method should return a collection of records that match the search term.
+     * The amount parameter can be used to limit the number of results returned.
+     * The query is designed to run on the source model and should
+     * include the model ID in the search.
+     *
+     * We support Scout out of the box, but if the model does not
+     * support Scout, we fall back to a simple query. You would want to
+     * extend this method in your model to add any additional
+     * search logic that you need.
+     */
+    public function getPossibleRecordsForMerging(string $search, int $amount = 10): Collection
+    {
+        if (method_exists($this, 'toSearchableArray')) {
+            return static::search($search)
+                ->whereNotIn($this->getKeyName(), [$this->getKey()])
+                ->take($amount)
+                ->get();
+        }
+
+        return static::query()
+            ->where($this->getKeyName(), '!=', $this->getKey())
+            ->take($amount)
+            ->get();
     }
 }

@@ -7,6 +7,7 @@ use Bernskiold\LaravelRecordMerge\Data\MergeData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingClosureDispatch;
 use Illuminate\Foundation\Bus\PendingDispatch;
+use Illuminate\Support\Collection;
 
 /**
  * @mixin Model
@@ -41,4 +42,14 @@ interface Mergeable
      * records that were later removed.
      */
     public function getMergeableLabel(): ?string;
+
+    /**
+     * Get the possible records for merging based on a search term.
+     *
+     * This method should return a collection of records that match the search term.
+     * The amount parameter can be used to limit the number of results returned.
+     * The query is designed to run on the source model and should
+     * include the model ID in the search.
+     */
+    public function getPossibleRecordsForMerging(string $search, int $amount = 10): Collection;
 }
