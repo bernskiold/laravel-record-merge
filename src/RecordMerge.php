@@ -293,11 +293,7 @@ class RecordMerge
 
             $returnTypeName = $returnType->getName();
 
-            if ($returnTypeName !== Relation::class) {
-                continue;
-            }
-
-            if (! is_subclass_of($returnTypeName, Relation::class)) {
+            if ($returnTypeName !== Relation::class && ! is_subclass_of($returnTypeName, Relation::class)) {
                 continue;
             }
 
