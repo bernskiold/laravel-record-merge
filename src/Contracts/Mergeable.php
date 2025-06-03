@@ -64,5 +64,4 @@ interface Mergeable
      * into the target record.
      */
     public function getProtectedRelationships(): array;
-
 }

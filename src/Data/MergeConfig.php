@@ -59,7 +59,7 @@ class MergeConfig
     {
         $strategy = Arr::get($this->map, $attribute);
 
-        if(!$strategy) {
+        if (! $strategy) {
             return null;
         }
 
