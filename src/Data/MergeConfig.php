@@ -57,7 +57,17 @@ class MergeConfig
      */
     public function getStrategyForAttribute(string $attribute): ?MergeStrategy
     {
-        return Arr::get($this->map, $attribute);
+        $strategy = Arr::get($this->map, $attribute);
+
+        if(!$strategy) {
+            return null;
+        }
+
+        if ($strategy instanceof MergeStrategy) {
+            return $strategy;
+        }
+
+        return MergeStrategy::from($strategy);
     }
 
     /**
