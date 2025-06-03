@@ -61,10 +61,12 @@ class RecordMerge
     public ?MergeConfig $mergeConfig = null;
 
     public function __construct(
-        public ?Mergeable $source = null,
-        public ?Mergeable $target = null,
+        public ?Mergeable       $source = null,
+        public ?Mergeable       $target = null,
         public ?Authenticatable $performedBy = null,
-    ) {}
+    )
+    {
+    }
 
     /**
      * Create a new record merge instance.
@@ -149,7 +151,7 @@ class RecordMerge
 
         $targetClass = get_class($this->target);
 
-        if (! $this->source instanceof $targetClass) {
+        if (!$this->source instanceof $targetClass) {
             throw InvalidRecordMergeException::notSameModel($this->source, $this->target);
         }
 
@@ -168,7 +170,7 @@ class RecordMerge
 
         return collect(array_keys($sourceAttributes))
             ->merge(array_keys($targetAttributes))
-            ->filter(fn ($attribute) => $this->canAttributeBeMerged($attribute))
+            ->filter(fn($attribute) => $this->canAttributeBeMerged($attribute))
             ->mapWithKeys(function ($attribute) {
                 return [
                     $attribute => new AttributeComparison(
@@ -189,7 +191,7 @@ class RecordMerge
     protected function getAttributesToMerge(): array
     {
         return collect($this->source->getAttributes())
-            ->filter(fn ($value, $attribute) => $this->canAttributeBeMerged($attribute))
+            ->filter(fn($value, $attribute) => $this->canAttributeBeMerged($attribute))
             ->unique()
             ->all();
     }
@@ -215,7 +217,7 @@ class RecordMerge
         foreach ($attributes as $key => $value) {
             $targetHasValue = $this->target->getAttribute($key) !== null;
             $hasNoMergeConfig = $this->mergeConfig === null;
-            $shouldNotMergeFromSource = $this->mergeConfig !== null && ! $this->mergeConfig->shouldMergeFromSource($key);
+            $shouldNotMergeFromSource = $this->mergeConfig !== null && !$this->mergeConfig->shouldMergeFromSource($key);
 
             // If the attribute is already set on the target model and we don't have a merge map
             // or the merge map doesn't specify to merge from source, we skip it.
@@ -268,6 +270,7 @@ class RecordMerge
     {
         $reflection = new \ReflectionClass($model);
         $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $protectedRelationships = $model->getProtectedRelationships();
 
         $relationships = [];
 
@@ -286,16 +289,26 @@ class RecordMerge
             $returnType = $method->getReturnType();
 
             // If no return type is defined, we can't determine if it's a relation
-            if (! $returnType instanceof \ReflectionNamedType) {
+            if (!$returnType instanceof \ReflectionNamedType) {
                 continue;
             }
 
             $returnTypeName = $returnType->getName();
 
-            // Check if return type is a Relation or a subclass of Relation
-            if ($returnTypeName === Relation::class || is_subclass_of($returnTypeName, Relation::class)) {
-                $relationships[] = $method->getName();
+            if ($returnTypeName !== Relation::class) {
+                continue;
             }
+
+            if (!is_subclass_of($returnTypeName, Relation::class)) {
+                continue;
+            }
+
+            // Skip protected relationships that are not meant to be merged
+            if (in_array($method->getName(), $protectedRelationships, false)) {
+                continue;
+            }
+
+            $relationships[] = $method->getName();
         }
 
         return $relationships;
@@ -388,7 +401,7 @@ class RecordMerge
         }
 
         // If we have a list of allowed attributes, we only merge those.
-        if (! empty($this->mergeableAttributes) && ! in_array($attribute, $this->mergeableAttributes, true)) {
+        if (!empty($this->mergeableAttributes) && !in_array($attribute, $this->mergeableAttributes, true)) {
             return false;
         }
 
@@ -458,7 +471,7 @@ class RecordMerge
      *
      * The callback will receive the source and target models as parameters.
      *
-     * @param  Closure(Mergeable $source, Mergeable $target, ?Authenticatable $performedBy): void  $callback
+     * @param Closure(Mergeable $source, Mergeable $target, ?Authenticatable $performedBy): void $callback
      */
     public function afterMerging(Closure $callback): static
     {

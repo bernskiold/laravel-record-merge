@@ -109,4 +109,16 @@ trait SupportsMerging
             ->take($amount)
             ->get();
     }
+
+    public function getProtectedRelationships(): array
+    {
+        $relationships = [];
+
+        // By default, we protect the Spatie Activity Log.
+        if (method_exists($this, 'getActivitylogOptions')) {
+            $relationships[] = 'activities';
+        }
+
+        return $relationships;
+    }
 }

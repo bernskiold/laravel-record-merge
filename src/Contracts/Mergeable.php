@@ -52,4 +52,17 @@ interface Mergeable
      * include the model ID in the search.
      */
     public function getPossibleRecordsForMerging(string $search, int $amount = 10): Collection;
+
+    /**
+     * Get the relationships that should not be merged.
+     *
+     * This method should return an array of relationship (method) names
+     * that should not be merged when merging this record.
+     *
+     * For example, you might have an activity log or a history
+     * that you want to preserve as is and not merge
+     * into the target record.
+     */
+    public function getProtectedRelationships(): array;
+
 }
