@@ -33,13 +33,7 @@ class TestCase extends Orchestra
 
         $driver = env('DB_DRIVER', 'sqlite');
 
-        if ($driver === 'sqlite' && extension_loaded('pdo_sqlite')) {
-            config()->set('database.connections.testing', [
-                'driver' => 'sqlite',
-                'database' => ':memory:',
-                'prefix' => '',
-            ]);
-        } elseif ($driver === 'pgsql' || (! extension_loaded('pdo_sqlite') && extension_loaded('pdo_pgsql'))) {
+        if ($driver === 'pgsql') {
             config()->set('database.connections.testing', [
                 'driver' => 'pgsql',
                 'host' => env('DB_HOST', '127.0.0.1'),
@@ -51,7 +45,7 @@ class TestCase extends Orchestra
                 'prefix' => '',
                 'schema' => 'public',
             ]);
-        } elseif ($driver === 'mysql' || (! extension_loaded('pdo_sqlite') && extension_loaded('pdo_mysql'))) {
+        } elseif ($driver === 'mysql') {
             config()->set('database.connections.testing', [
                 'driver' => 'mysql',
                 'host' => env('DB_HOST', '127.0.0.1'),
@@ -64,7 +58,6 @@ class TestCase extends Orchestra
                 'prefix' => '',
             ]);
         } else {
-            // Fallback to SQLite (will fail if extension not available)
             config()->set('database.connections.testing', [
                 'driver' => 'sqlite',
                 'database' => ':memory:',
