@@ -228,8 +228,10 @@ class RecordMerge
                 continue;
             }
 
-            // Set the attribute on the target model.
-            $this->target->{$key} = $value;
+            // Use getAttribute() to read the cast value from the source model,
+            // so that cast attributes (e.g. JSON) are not double-encoded
+            // when set through the target model's setter.
+            $this->target->{$key} = $this->source->getAttribute($key);
         }
 
         // Save the target model with the merged attributes.
