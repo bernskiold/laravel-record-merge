@@ -5,6 +5,7 @@ use Bernskiold\LaravelRecordMerge\Contracts\Mergeable;
 use Bernskiold\LaravelRecordMerge\Exceptions\InvalidRecordMergeException;
 use Bernskiold\LaravelRecordMerge\RecordMerge;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User;
 
 describe('instantiation', function () {
     it('can be instantiated using the constructor without parameters', function () {
@@ -12,7 +13,7 @@ describe('instantiation', function () {
     });
 
     it('can be instantiated with a source', function () {
-        $source = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
+        $source = mock(Mergeable::class);
         $recordMerge = new RecordMerge($source);
 
         expect($recordMerge->source)->toBe($source)
@@ -21,7 +22,7 @@ describe('instantiation', function () {
     });
 
     it('can be instantiated with target', function () {
-        $target = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
+        $target = mock(Mergeable::class);
         $recordMerge = new RecordMerge(null, $target);
 
         expect($recordMerge->source)->toBeNull()
@@ -30,7 +31,7 @@ describe('instantiation', function () {
     });
 
     it('can be instantiated with performer', function () {
-        $performer = mock(Illuminate\Foundation\Auth\User::class);
+        $performer = mock(User::class);
         $recordMerge = new RecordMerge(null, null, $performer);
 
         expect($recordMerge->source)->toBeNull()
@@ -39,9 +40,9 @@ describe('instantiation', function () {
     });
 
     it('can be instantiated using the static new method', function () {
-        $source = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
-        $target = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
-        $performer = mock(Illuminate\Foundation\Auth\User::class);
+        $source = mock(Mergeable::class);
+        $target = mock(Mergeable::class);
+        $performer = mock(User::class);
 
         $recordMerge = RecordMerge::new($source, $target, $performer);
 
@@ -54,14 +55,14 @@ describe('instantiation', function () {
 describe('validation', function () {
 
     it('throws validation exception if source is missing', function () {
-        $target = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
+        $target = mock(Mergeable::class);
         $recordMerge = new RecordMerge(null, $target);
 
         $recordMerge->validate();
     })->throws(InvalidRecordMergeException::class, 'No source model was provided for merging from.');
 
     it('throws validation exception if target is missing', function () {
-        $source = mock(Bernskiold\LaravelRecordMerge\Contracts\Mergeable::class);
+        $source = mock(Mergeable::class);
         $recordMerge = new RecordMerge($source, null);
 
         $recordMerge->validate();
@@ -180,7 +181,7 @@ describe('fluent configuration', function () {
     });
 
     it('can set the performer', function () {
-        $performer = mock(Illuminate\Foundation\Auth\User::class);
+        $performer = mock(User::class);
         $recordMerge = RecordMerge::new()->performedBy($performer);
 
         expect($recordMerge->performedBy)->toBe($performer);
