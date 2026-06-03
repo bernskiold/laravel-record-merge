@@ -66,6 +66,13 @@ it('can generate a unique ID', function () {
     expect($job->uniqueId())->toBe('SourceModel:1-TargetModel:2');
 });
 
+it('uses the failed() hook the queue calls on permanent failure', function () {
+    // The queue worker invokes failed(), not fail(), once a job exhausts its
+    // retries. Naming the hook anything else means the failure event never
+    // fires in production even though a direct call would appear to work.
+    expect(method_exists(MergeRecordJob::class, 'failed'))->toBeTrue();
+});
+
 it('triggers RecordMergeFailed event on failure', function () {
     Event::fake();
 
@@ -74,7 +81,7 @@ it('triggers RecordMergeFailed event on failure', function () {
     $performer = mock(User::class);
 
     $job = new MergeRecordJob($source, $target, $performer);
-    $job->fail(new Exception('Test exception'));
+    $job->failed(new Exception('Test exception'));
 
     Event::assertDispatched(RecordMergeFailed::class, function ($event) use ($source, $target, $performer) {
         return $event->source === $source &&
