@@ -14,6 +14,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class MergeRecordJob implements ShouldBeUnique, ShouldQueue
 {
@@ -50,7 +51,14 @@ class MergeRecordJob implements ShouldBeUnique, ShouldQueue
             ->toString();
     }
 
-    public function fail($exception = null): void
+    /**
+     * Handle a permanently-failed job.
+     *
+     * The queue worker calls `failed()` (not `fail()`) once a job exhausts its
+     * retries, so the failure event must be dispatched from here for listeners
+     * and notifications to fire.
+     */
+    public function failed(?Throwable $exception): void
     {
         event(new RecordMergeFailed($this->source, $this->target, $this->performedBy, $exception));
     }
