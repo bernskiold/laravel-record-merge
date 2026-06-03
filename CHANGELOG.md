@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-record-merge` will be documented in this file.
 
+## 0.2.1 - 2026-06-03
+
+### What's Changed
+
+* Fix failure event never firing by renaming fail() to failed() by @ErikBernskiold in https://github.com/bernskiold/laravel-record-merge/pull/19
+
+**Full Changelog**: https://github.com/bernskiold/laravel-record-merge/compare/0.2.0...0.2.1
+
 ## 0.2.0 - 2026-04-25
 
 ### What's Changed
